@@ -45,6 +45,14 @@ class PendingIntentFactory
                     },
                     FLAG_UPDATE_CURRENT)
 
+    fun backup(): PendingIntent =
+            PendingIntent.getBroadcast(
+                    context, 0,
+                    Intent(context, BackupReceiver::class.java).apply {
+                        action = BackupReceiver.BACKUP
+                    },
+                    FLAG_UPDATE_CURRENT)
+
     fun dismissNotification(habit: Habit): PendingIntent =
             PendingIntent.getBroadcast(
                     context, 0,

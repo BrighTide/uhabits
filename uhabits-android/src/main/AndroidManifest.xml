@@ -20,6 +20,7 @@
 <manifest
     package="org.isoron.uhabits"
     xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
     android:versionCode="36"
     android:versionName="1.7.9">
 
@@ -192,6 +193,17 @@
             </intent-filter>
         </receiver>
 
+        <receiver android:name=".receivers.BackupReceiver">
+            <intent-filter>
+                <category android:name="android.intent.category.DEFAULT"/>
+
+                <action android:name="org.isoron.uhabits.BACKUP"/>
+                <data
+                    android:host="org.isoron.uhabits"
+                    android:scheme="content"/>
+            </intent-filter>
+        </receiver>
+
         <!-- Locale/Tasker -->
         <activity
             android:name=".automation.EditSettingActivity"
@@ -228,5 +240,7 @@
             android:exported="false">
         </service>
     </application>
-
+    <uses-permission android:name="android.permission.WAKE_LOCK"></uses-permission>
+    <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE" />
+    <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE" />
 </manifest>

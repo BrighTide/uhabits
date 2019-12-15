@@ -36,7 +36,7 @@ public class ReminderScheduler implements CommandRunner.Listener
 
     private HabitList habitList;
 
-    private SystemScheduler sys;
+    public SystemScheduler sys;
 
     @Inject
     public ReminderScheduler(@NonNull CommandRunner commandRunner,
@@ -101,5 +101,6 @@ public class ReminderScheduler implements CommandRunner.Listener
     public interface SystemScheduler
     {
         void scheduleShowReminder(long reminderTime, Habit habit, long timestamp);
+        void scheduleBackup();
     }
 }

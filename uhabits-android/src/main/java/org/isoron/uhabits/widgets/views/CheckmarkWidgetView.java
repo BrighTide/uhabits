@@ -47,6 +47,8 @@ public class CheckmarkWidgetView extends HabitWidgetView
 
     private int checkmarkValue;
 
+    private int freeDays;
+
     public CheckmarkWidgetView(Context context)
     {
         super(context);
@@ -66,52 +68,56 @@ public class CheckmarkWidgetView extends HabitWidgetView
         StyledResources res = new StyledResources(getContext());
 
         String text;
-        int bgColor;
         int fgColor;
+        int transparent = android.graphics.Color.argb(0, 0, 0, 0);
+        int white = android.graphics.Color.argb(175, 255, 255, 255);
+
+        int highContrast = res.getColor(R.attr.highContrastReverseTextColor);
+        int lowContrast = R.attr.cardBackgroundColor;
+        setShadowAlpha(0x00);
+
+        rebuildBackground();
+
+        backgroundPaint.setColor(transparent);
+        frame.setBackgroundDrawable(background);
 
         switch (checkmarkValue)
         {
             case Checkmark.CHECKED_EXPLICITLY:
-                text = getResources().getString(R.string.fa_check);
-                bgColor = activeColor;
-                fgColor = res.getColor(R.attr.highContrastReverseTextColor);
+                ring.setColor(activeColor);
+                ring.setText(getResources().getString(R.string.fa_check));
 
-                setShadowAlpha(0x4f);
-                rebuildBackground();
+                label.setTextColor(highContrast);
 
-                backgroundPaint.setColor(bgColor);
-                frame.setBackgroundDrawable(background);
                 break;
 
             case Checkmark.CHECKED_IMPLICITLY:
-                text = getResources().getString(R.string.fa_check);
-                bgColor = res.getColor(R.attr.cardBackgroundColor);
-                fgColor = res.getColor(R.attr.mediumContrastTextColor);
+                ring.setColor(white);
+                if (freeDays <= 0) {
+                    ring.setText(getResources().getString(R.string.fa_check));
+                }
+                else {
+                    ring.setText(String.valueOf(freeDays));
+                }
 
-                setShadowAlpha(0x00);
-                rebuildBackground();
+                label.setTextColor(highContrast);
 
                 break;
 
             case Checkmark.UNCHECKED:
             default:
-                text = getResources().getString(R.string.fa_times);
-                bgColor = res.getColor(R.attr.cardBackgroundColor);
-                fgColor = res.getColor(R.attr.mediumContrastTextColor);
+                ring.setColor(white);
+                ring.setText(String.valueOf(freeDays));
 
-                setShadowAlpha(0x00);
-                rebuildBackground();
+                label.setTextColor(highContrast);
 
                 break;
         }
 
         ring.setPercentage(percentage);
-        ring.setColor(fgColor);
-        ring.setBackgroundColor(bgColor);
-        ring.setText(text);
+        ring.setBackgroundColor(transparent); // I think this needs to be transparent
 
         label.setText(name);
-        label.setTextColor(fgColor);
 
         requestLayout();
         postInvalidate();
@@ -125,6 +131,10 @@ public class CheckmarkWidgetView extends HabitWidgetView
     public void setCheckmarkValue(int checkmarkValue)
     {
         this.checkmarkValue = checkmarkValue;
+    }
+
+    public void setFreeDaysLeft(int freeDays) {
+        this.freeDays = freeDays;
     }
 
     public void setName(@NonNull String name)
@@ -163,9 +173,9 @@ public class CheckmarkWidgetView extends HabitWidgetView
             ring.setVisibility(VISIBLE);
 
         widthMeasureSpec =
-            MeasureSpec.makeMeasureSpec((int) w, MeasureSpec.EXACTLY);
+                MeasureSpec.makeMeasureSpec((int) w, MeasureSpec.EXACTLY);
         heightMeasureSpec =
-            MeasureSpec.makeMeasureSpec((int) h, MeasureSpec.EXACTLY);
+                MeasureSpec.makeMeasureSpec((int) h, MeasureSpec.EXACTLY);
 
         float textSize = 0.15f * h;
         float maxTextSize = getDimension(getContext(), R.dimen.smallerTextSize);

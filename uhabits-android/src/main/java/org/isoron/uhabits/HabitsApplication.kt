@@ -28,6 +28,8 @@ import org.isoron.uhabits.core.ui.*
 import org.isoron.uhabits.utils.*
 import org.isoron.uhabits.widgets.*
 import java.io.*
+import java.util.Calendar;
+import android.app.PendingIntent;
 
 /**
  * The Android application for Loop Habit Tracker.
@@ -68,6 +70,8 @@ class HabitsApplication : Application() {
 
         notificationTray = component.notificationTray
         notificationTray.startListening()
+
+        reminderScheduler.sys.scheduleBackup()
 
         val prefs = component.preferences
         prefs.setLastAppVersion(BuildConfig.VERSION_CODE)

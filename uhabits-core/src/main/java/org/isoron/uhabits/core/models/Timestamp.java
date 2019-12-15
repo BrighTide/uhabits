@@ -39,6 +39,7 @@ public final class Timestamp
 
     public Timestamp(long unixTime)
     {
+
         if (unixTime < 0 || unixTime % DAY_LENGTH != 0)
             throw new IllegalArgumentException(
                 "Invalid unix time: " + unixTime);

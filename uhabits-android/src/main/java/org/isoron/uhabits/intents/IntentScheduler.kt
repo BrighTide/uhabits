@@ -25,11 +25,13 @@ import android.content.*
 import android.content.Context.*
 import android.os.Build.VERSION.*
 import android.os.Build.VERSION_CODES.*
+import android.os.SystemClock
 import org.isoron.androidbase.*
 import org.isoron.uhabits.*
 import org.isoron.uhabits.core.*
 import org.isoron.uhabits.core.models.*
 import org.isoron.uhabits.core.reminders.*
+import java.util.*
 import javax.inject.*
 
 @AppScope
@@ -48,6 +50,19 @@ class IntentScheduler
             manager.setExactAndAllowWhileIdle(RTC_WAKEUP, timestamp, intent)
         else
             manager.setExact(RTC_WAKEUP, timestamp, intent)
+    }
+
+    override fun scheduleBackup() {
+        println("PENDING BACKUP INTENT SCHEDULED")
+
+        val calendar = Calendar.getInstance()
+
+        calendar.set(Calendar.HOUR_OF_DAY, 4)
+        calendar.set(Calendar.MINUTE, 0)
+        calendar.set(Calendar.SECOND, 0)
+
+        val intent = pendingIntents.backup()
+        manager.setInexactRepeating(RTC_WAKEUP, calendar.getTimeInMillis(), AlarmManager.INTERVAL_DAY, intent)
     }
 
     override fun scheduleShowReminder(reminderTime: Long,
