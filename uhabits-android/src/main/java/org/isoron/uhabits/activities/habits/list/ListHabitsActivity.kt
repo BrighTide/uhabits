@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2016 Álinson Santos Xavier <isoron@gmail.com>
+ * Copyright (C) 2016-2021 Álinson Santos Xavier <git@axavier.org>
  *
  * This file is part of Loop Habit Tracker.
  *
@@ -21,23 +21,39 @@ package org.isoron.uhabits.activities.habits.list
 
 import android.Manifest
 import android.app.Activity
+import android.content.Intent
 import android.content.pm.PackageManager
-import android.os.*
-import android.support.v4.app.ActivityCompat
-import org.isoron.uhabits.activities.*
-import org.isoron.uhabits.activities.habits.list.views.*
-import org.isoron.uhabits.core.preferences.*
-import org.isoron.uhabits.core.ui.ThemeSwitcher.*
-import org.isoron.uhabits.core.utils.*
+import android.os.Bundle
+import android.view.Menu
+import android.view.MenuItem
+import androidx.appcompat.app.AppCompatActivity
+import androidx.core.app.ActivityCompat
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import org.isoron.uhabits.BaseExceptionHandler
+import org.isoron.uhabits.HabitsApplication
+import org.isoron.uhabits.activities.habits.list.views.HabitCardListAdapter
+import org.isoron.uhabits.core.preferences.Preferences
+import org.isoron.uhabits.core.tasks.TaskRunner
+import org.isoron.uhabits.core.ui.ThemeSwitcher.Companion.THEME_DARK
+import org.isoron.uhabits.core.utils.MidnightTimer
+import org.isoron.uhabits.database.AutoBackup
+import org.isoron.uhabits.inject.ActivityContextModule
+import org.isoron.uhabits.inject.DaggerHabitsActivityComponent
+import org.isoron.uhabits.utils.restartWithFade
 
-class ListHabitsActivity : HabitsActivity() {
+class ListHabitsActivity : AppCompatActivity() {
 
     var pureBlack: Boolean = false
+    lateinit var taskRunner: TaskRunner
     lateinit var adapter: HabitCardListAdapter
     lateinit var rootView: ListHabitsRootView
     lateinit var screen: ListHabitsScreen
     lateinit var prefs: Preferences
     lateinit var midnightTimer: MidnightTimer
+    private val scope = CoroutineScope(Dispatchers.Main)
+
+    private lateinit var menu: ListHabitsMenu
 
 
     // Storage Permissions
@@ -65,17 +81,28 @@ class ListHabitsActivity : HabitsActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+
+        val appComponent = (applicationContext as HabitsApplication).component
+        val component = DaggerHabitsActivityComponent
+            .builder()
+            .activityContextModule(ActivityContextModule(this))
+            .habitsApplicationComponent(appComponent)
+            .build()
+        component.themeSwitcher.apply()
+
         prefs = appComponent.preferences
         pureBlack = prefs.isPureBlackEnabled
         midnightTimer = appComponent.midnightTimer
         rootView = component.listHabitsRootView
         screen = component.listHabitsScreen
         adapter = component.habitCardListAdapter
-
-        setScreen(screen)
+        taskRunner = appComponent.taskRunner
+        menu = component.listHabitsMenu
+        Thread.setDefaultUncaughtExceptionHandler(BaseExceptionHandler(this))
         component.listHabitsBehavior.onStartup()
 
         this.verifyStoragePermissions(this)
+        setContentView(rootView)
     }
 
     override fun onPause() {
@@ -90,11 +117,27 @@ class ListHabitsActivity : HabitsActivity() {
         screen.onAttached()
         rootView.postInvalidate()
         midnightTimer.onResume()
-
+        taskRunner.run {
+            AutoBackup(this@ListHabitsActivity).run()
+        }
         if (prefs.theme == THEME_DARK && prefs.isPureBlackEnabled != pureBlack) {
             restartWithFade(ListHabitsActivity::class.java)
         }
-
         super.onResume()
+    }
+
+    override fun onCreateOptionsMenu(m: Menu): Boolean {
+        menu.onCreate(menuInflater, m)
+        return true
+    }
+
+    override fun onOptionsItemSelected(item: MenuItem): Boolean {
+        invalidateOptionsMenu()
+        return menu.onItemSelected(item)
+    }
+
+    override fun onActivityResult(request: Int, result: Int, data: Intent?) {
+        super.onActivityResult(request, result, data)
+        screen.onResult(request, result, data)
     }
 }

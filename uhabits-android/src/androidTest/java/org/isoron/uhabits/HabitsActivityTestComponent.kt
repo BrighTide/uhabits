@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2016 Álinson Santos Xavier <isoron@gmail.com>
+ * Copyright (C) 2016-2021 Álinson Santos Xavier <git@axavier.org>
  *
  * This file is part of Loop Habit Tracker.
  *
@@ -19,35 +19,38 @@
 
 package org.isoron.uhabits
 
-import dagger.*
-import org.isoron.androidbase.activities.*
-import org.isoron.uhabits.activities.*
-import org.isoron.uhabits.activities.about.*
-import org.isoron.uhabits.activities.habits.list.*
-import org.isoron.uhabits.activities.habits.list.views.*
-import org.isoron.uhabits.activities.habits.show.*
-import org.isoron.uhabits.core.ui.screens.habits.list.*
-import org.mockito.Mockito.*
+import com.nhaarman.mockitokotlin2.mock
+import dagger.Component
+import dagger.Module
+import dagger.Provides
+import org.isoron.uhabits.activities.habits.list.ListHabitsModule
+import org.isoron.uhabits.activities.habits.list.views.CheckmarkButtonViewFactory
+import org.isoron.uhabits.activities.habits.list.views.CheckmarkPanelViewFactory
+import org.isoron.uhabits.activities.habits.list.views.HabitCardViewFactory
+import org.isoron.uhabits.activities.habits.list.views.NumberButtonViewFactory
+import org.isoron.uhabits.activities.habits.list.views.NumberPanelViewFactory
+import org.isoron.uhabits.core.ui.screens.habits.list.ListHabitsBehavior
+import org.isoron.uhabits.inject.ActivityContextModule
+import org.isoron.uhabits.inject.ActivityScope
+import org.isoron.uhabits.inject.HabitModule
+import org.isoron.uhabits.inject.HabitsActivityModule
+import org.isoron.uhabits.inject.HabitsApplicationComponent
 
 @Module
 class TestModule {
-    @Provides fun ListHabitsBehavior() = mock(ListHabitsBehavior::class.java)
+    @Provides
+    fun listHabitsBehavior(): ListHabitsBehavior = mock()
 }
 
 @ActivityScope
-@Component(modules = arrayOf(
-        ActivityContextModule::class,
-        AboutModule::class,
-        HabitsActivityModule::class,
-        ListHabitsModule::class,
-        ShowHabitModule::class,
-        HabitModule::class,
-        TestModule::class
-), dependencies = arrayOf(HabitsApplicationComponent::class))
+@Component(
+    modules = [ActivityContextModule::class, HabitsActivityModule::class, ListHabitsModule::class, HabitModule::class, TestModule::class],
+    dependencies = [HabitsApplicationComponent::class]
+)
 interface HabitsActivityTestComponent {
     fun getCheckmarkPanelViewFactory(): CheckmarkPanelViewFactory
     fun getHabitCardViewFactory(): HabitCardViewFactory
-    fun getCheckmarkButtonViewFactory(): CheckmarkButtonViewFactory
+    fun getEntryButtonViewFactory(): CheckmarkButtonViewFactory
     fun getNumberButtonViewFactory(): NumberButtonViewFactory
     fun getNumberPanelViewFactory(): NumberPanelViewFactory
 }

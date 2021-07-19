@@ -26,11 +26,9 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.os.Environment;
-import android.support.v4.app.ActivityCompat;
 import android.util.Log;
 
 import org.isoron.uhabits.HabitsApplication;
-import org.isoron.uhabits.HabitsApplicationComponent;
 import org.isoron.uhabits.core.models.Habit;
 import org.isoron.uhabits.core.models.HabitList;
 import org.isoron.uhabits.core.tasks.ExportCSVTask;

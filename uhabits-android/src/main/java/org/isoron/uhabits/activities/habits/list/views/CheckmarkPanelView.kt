@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2016 Álinson Santos Xavier <isoron@gmail.com>
+ * Copyright (C) 2016-2021 Álinson Santos Xavier <git@axavier.org>
  *
  * This file is part of Loop Habit Tracker.
  *
@@ -19,19 +19,27 @@
 
 package org.isoron.uhabits.activities.habits.list.views
 
-import android.content.*
-import com.google.auto.factory.*
-import org.isoron.androidbase.activities.*
-import org.isoron.uhabits.core.models.*
-import org.isoron.uhabits.core.models.Checkmark.*
-import org.isoron.uhabits.core.preferences.*
-import org.isoron.uhabits.core.utils.*
+import android.content.Context
+import org.isoron.uhabits.core.models.Entry.Companion.UNKNOWN
+import org.isoron.uhabits.core.models.Timestamp
+import org.isoron.uhabits.core.preferences.Preferences
+import org.isoron.uhabits.core.utils.DateUtils
+import org.isoron.uhabits.inject.ActivityContext
+import javax.inject.Inject
 
-@AutoFactory
+class CheckmarkPanelViewFactory
+@Inject constructor(
+    @ActivityContext val context: Context,
+    val preferences: Preferences,
+    private val buttonFactory: CheckmarkButtonViewFactory
+) {
+    fun create() = CheckmarkPanelView(context, preferences, buttonFactory)
+}
+
 class CheckmarkPanelView(
-        @Provided @ActivityContext context: Context,
-        @Provided preferences: Preferences,
-        @Provided private val buttonFactory: CheckmarkButtonViewFactory
+    context: Context,
+    preferences: Preferences,
+    private val buttonFactory: CheckmarkButtonViewFactory
 ) : ButtonPanelView<CheckmarkButtonView>(context, preferences) {
 
     var values = IntArray(0)
@@ -46,7 +54,7 @@ class CheckmarkPanelView(
             setupButtons()
         }
 
-    var onToggle: (Timestamp) -> Unit = {}
+    var onToggle: (Timestamp, Int) -> Unit = { _, _ -> }
         set(value) {
             field = value
             setupButtons()
@@ -56,16 +64,16 @@ class CheckmarkPanelView(
 
     @Synchronized
     override fun setupButtons() {
-        val today = DateUtils.getToday()
+        val today = DateUtils.getTodayWithOffset()
 
         buttons.forEachIndexed { index, button ->
             val timestamp = today.minus(index + dataOffset)
             button.value = when {
                 index + dataOffset < values.size -> values[index + dataOffset]
-                else -> UNCHECKED
+                else -> UNKNOWN
             }
             button.color = color
-            button.onToggle = { onToggle(timestamp) }
+            button.onToggle = { value -> onToggle(timestamp, value) }
         }
     }
 }

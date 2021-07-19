@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2016 Álinson Santos Xavier <isoron@gmail.com>
+ * Copyright (C) 2016-2021 Álinson Santos Xavier <git@axavier.org>
  *
  * This file is part of Loop Habit Tracker.
  *
@@ -19,35 +19,77 @@
 
 package org.isoron.uhabits.activities.habits.list
 
-import android.view.*
-import dagger.*
-import org.isoron.androidbase.activities.*
-import org.isoron.uhabits.*
-import org.isoron.uhabits.activities.habits.list.views.*
-import org.isoron.uhabits.core.commands.*
-import org.isoron.uhabits.core.preferences.*
-import org.isoron.uhabits.core.ui.*
-import org.isoron.uhabits.core.ui.screens.habits.list.*
-import org.isoron.uhabits.core.utils.*
-import javax.inject.*
+import android.content.Context
+import android.view.Menu
+import android.view.MenuItem
+import androidx.appcompat.app.AppCompatActivity
+import androidx.appcompat.view.ActionMode
+import dagger.Lazy
+import org.isoron.uhabits.R
+import org.isoron.uhabits.activities.habits.list.views.HabitCardListAdapter
+import org.isoron.uhabits.activities.habits.list.views.HabitCardListController
+import org.isoron.uhabits.core.commands.CommandRunner
+import org.isoron.uhabits.core.preferences.Preferences
+import org.isoron.uhabits.core.ui.NotificationTray
+import org.isoron.uhabits.core.ui.screens.habits.list.ListHabitsSelectionMenuBehavior
+import org.isoron.uhabits.core.utils.DateUtils
+import org.isoron.uhabits.inject.ActivityContext
+import org.isoron.uhabits.inject.ActivityScope
+import javax.inject.Inject
 
 @ActivityScope
 class ListHabitsSelectionMenu @Inject constructor(
-        private val screen: ListHabitsScreen,
-        private val listAdapter: HabitCardListAdapter,
-        var commandRunner: CommandRunner,
-        private val prefs: Preferences,
-        private val behavior: ListHabitsSelectionMenuBehavior,
-        private val listController: Lazy<HabitCardListController>,
-        private val notificationTray: NotificationTray
-) : BaseSelectionMenu() {
+    @ActivityContext context: Context,
+    private val listAdapter: HabitCardListAdapter,
+    var commandRunner: CommandRunner,
+    private val prefs: Preferences,
+    private val behavior: ListHabitsSelectionMenuBehavior,
+    private val listController: Lazy<HabitCardListController>,
+    private val notificationTray: NotificationTray
+) : ActionMode.Callback {
 
-    override fun onFinish() {
-        listController.get().onSelectionFinished()
-        super.onFinish()
+    val activity = (context as AppCompatActivity)
+
+    var activeActionMode: ActionMode? = null
+
+    fun onSelectionStart() {
+        activity.startSupportActionMode(this)
     }
 
-    override fun onItemClicked(item: MenuItem): Boolean {
+    fun onSelectionChange() {
+        activeActionMode?.invalidate()
+    }
+
+    fun onSelectionFinish() {
+        activeActionMode?.finish()
+    }
+
+    override fun onCreateActionMode(mode: ActionMode, menu: Menu): Boolean {
+        activeActionMode = mode
+        activity.menuInflater.inflate(R.menu.list_habits_selection, menu)
+        return true
+    }
+
+    override fun onPrepareActionMode(mode: ActionMode, menu: Menu): Boolean {
+        val itemEdit = menu.findItem(R.id.action_edit_habit)
+        val itemColor = menu.findItem(R.id.action_color)
+        val itemArchive = menu.findItem(R.id.action_archive_habit)
+        val itemUnarchive = menu.findItem(R.id.action_unarchive_habit)
+        val itemNotify = menu.findItem(R.id.action_notify)
+
+        itemColor.isVisible = true
+        itemEdit.isVisible = behavior.canEdit()
+        itemArchive.isVisible = behavior.canArchive()
+        itemUnarchive.isVisible = behavior.canUnarchive()
+        itemNotify.isVisible = prefs.isDeveloper
+        activeActionMode?.title = listAdapter.selected.size.toString()
+        return true
+    }
+    override fun onDestroyActionMode(mode: ActionMode?) {
+        listController.get().onSelectionFinished()
+    }
+
+    override fun onActionItemClicked(mode: ActionMode, item: MenuItem): Boolean {
         when (item.itemId) {
             R.id.action_edit_habit -> {
                 behavior.onEditHabits()
@@ -75,7 +117,7 @@ class ListHabitsSelectionMenu @Inject constructor(
             }
 
             R.id.action_notify -> {
-                for(h in listAdapter.selected)
+                for (h in listAdapter.selected)
                     notificationTray.show(h, DateUtils.getToday(), 0)
                 return true
             }
@@ -83,26 +125,4 @@ class ListHabitsSelectionMenu @Inject constructor(
             else -> return false
         }
     }
-
-    override fun onPrepare(menu: Menu): Boolean {
-        val itemEdit = menu.findItem(R.id.action_edit_habit)
-        val itemColor = menu.findItem(R.id.action_color)
-        val itemArchive = menu.findItem(R.id.action_archive_habit)
-        val itemUnarchive = menu.findItem(R.id.action_unarchive_habit)
-        val itemNotify = menu.findItem(R.id.action_notify)
-
-        itemColor.isVisible = true
-        itemEdit.isVisible = behavior.canEdit()
-        itemArchive.isVisible = behavior.canArchive()
-        itemUnarchive.isVisible = behavior.canUnarchive()
-        setTitle(Integer.toString(listAdapter.selected.size))
-        itemNotify.isVisible = prefs.isDeveloper
-
-        return true
-    }
-
-    fun onSelectionStart() = screen.startSelection()
-    fun onSelectionChange() = invalidate()
-    fun onSelectionFinish() = finish()
-    override fun getResourceId() = R.menu.list_habits_selection
 }

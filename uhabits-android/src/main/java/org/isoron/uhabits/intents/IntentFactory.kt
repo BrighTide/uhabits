@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2016 Álinson Santos Xavier <isoron@gmail.com>
+ * Copyright (C) 2016-2021 Álinson Santos Xavier <git@axavier.org>
  *
  * This file is part of Loop Habit Tracker.
  *
@@ -19,21 +19,23 @@
 
 package org.isoron.uhabits.intents
 
-import android.content.*
-import android.net.*
-import org.isoron.uhabits.*
-import org.isoron.uhabits.activities.about.*
-import org.isoron.uhabits.activities.habits.show.*
-import org.isoron.uhabits.activities.intro.*
-import org.isoron.uhabits.activities.settings.*
-import org.isoron.uhabits.core.models.*
-import javax.inject.*
+import android.content.Context
+import android.content.Intent
+import android.net.Uri
+import org.isoron.uhabits.R
+import org.isoron.uhabits.activities.about.AboutActivity
+import org.isoron.uhabits.activities.habits.edit.EditHabitActivity
+import org.isoron.uhabits.activities.habits.show.ShowHabitActivity
+import org.isoron.uhabits.activities.intro.IntroActivity
+import org.isoron.uhabits.activities.settings.SettingsActivity
+import org.isoron.uhabits.core.models.Habit
+import javax.inject.Inject
 
 class IntentFactory
 @Inject constructor() {
 
     fun helpTranslate(context: Context) =
-            buildViewIntent(context.getString(R.string.translateURL))
+        buildViewIntent(context.getString(R.string.translateURL))
 
     fun openDocument() = Intent(Intent.ACTION_OPEN_DOCUMENT).apply {
         addCategory(Intent.CATEGORY_OPENABLE)
@@ -41,30 +43,33 @@ class IntentFactory
     }
 
     fun rateApp(context: Context) =
-            buildViewIntent(context.getString(R.string.playStoreURL))
+        buildViewIntent(context.getString(R.string.playStoreURL))
 
     fun sendFeedback(context: Context) =
-            buildSendToIntent(context.getString(R.string.feedbackURL))
+        buildSendToIntent(context.getString(R.string.feedbackURL))
+
+    fun privacyPolicy(context: Context) =
+        buildViewIntent(context.getString(R.string.privacyPolicyURL))
 
     fun startAboutActivity(context: Context) =
-            Intent(context, AboutActivity::class.java)
+        Intent(context, AboutActivity::class.java)
 
     fun startIntroActivity(context: Context) =
-            Intent(context, IntroActivity::class.java)
+        Intent(context, IntroActivity::class.java)
 
     fun startSettingsActivity(context: Context) =
-            Intent(context, SettingsActivity::class.java)
+        Intent(context, SettingsActivity::class.java)
 
     fun startShowHabitActivity(context: Context, habit: Habit) =
-            Intent(context, ShowHabitActivity::class.java).apply {
-                data = Uri.parse(habit.uriString)
-            }
+        Intent(context, ShowHabitActivity::class.java).apply {
+            data = Uri.parse(habit.uriString)
+        }
 
     fun viewFAQ(context: Context) =
-            buildViewIntent(context.getString(R.string.helpURL))
+        buildViewIntent(context.getString(R.string.helpURL))
 
     fun viewSourceCode(context: Context) =
-            buildViewIntent(context.getString(R.string.sourceCodeURL))
+        buildViewIntent(context.getString(R.string.sourceCodeURL))
 
     private fun buildSendToIntent(url: String) = Intent().apply {
         action = Intent.ACTION_SENDTO
@@ -74,5 +79,25 @@ class IntentFactory
     private fun buildViewIntent(url: String) = Intent().apply {
         action = Intent.ACTION_VIEW
         data = Uri.parse(url)
+    }
+
+    fun codeContributors(context: Context) =
+        buildViewIntent(context.getString(R.string.codeContributorsURL))
+
+    private fun startEditActivity(context: Context): Intent {
+        return Intent(context, EditHabitActivity::class.java)
+    }
+
+    fun startEditActivity(context: Context, habit: Habit): Intent {
+        val intent = startEditActivity(context)
+        intent.putExtra("habitId", habit.id)
+        intent.putExtra("habitType", habit.type)
+        return intent
+    }
+
+    fun startEditActivity(context: Context, habitType: Int): Intent {
+        val intent = startEditActivity(context)
+        intent.putExtra("habitType", habitType)
+        return intent
     }
 }

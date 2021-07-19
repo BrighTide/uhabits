@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2016 Álinson Santos Xavier <isoron@gmail.com>
+ * Copyright (C) 2016-2021 Álinson Santos Xavier <git@axavier.org>
  *
  * This file is part of Loop Habit Tracker.
  *
@@ -19,15 +19,17 @@
 
 package org.isoron.uhabits.activities.habits.list.views
 
-import android.support.test.filters.*
-import android.support.test.runner.*
-import org.hamcrest.CoreMatchers.*
-import org.hamcrest.MatcherAssert.*
-import org.isoron.uhabits.*
-import org.isoron.uhabits.core.models.*
-import org.isoron.uhabits.utils.*
-import org.junit.*
-import org.junit.runner.*
+import androidx.test.ext.junit.runners.AndroidJUnit4
+import androidx.test.filters.MediumTest
+import org.hamcrest.CoreMatchers.equalTo
+import org.hamcrest.MatcherAssert.assertThat
+import org.isoron.uhabits.BaseViewTest
+import org.isoron.uhabits.core.models.Timestamp
+import org.isoron.uhabits.utils.PaletteUtils
+import org.junit.After
+import org.junit.Before
+import org.junit.Test
+import org.junit.runner.RunWith
 
 @RunWith(AndroidJUnit4::class)
 @MediumTest
@@ -39,10 +41,14 @@ class NumberPanelViewTest : BaseViewTest() {
     @Before
     override fun setUp() {
         super.setUp()
-        prefs.isCheckmarkSequenceReversed = false
-
-        val checkmarks = doubleArrayOf(1400.0, 5300.0, 0.0,
-                                       14600.0, 2500.0, 45000.0)
+        val checkmarks = doubleArrayOf(
+            1400.0,
+            5300.0,
+            0.0,
+            14600.0,
+            2500.0,
+            45000.0
+        )
 
         view = component.getNumberPanelViewFactory().create().apply {
             values = checkmarks
@@ -63,24 +69,6 @@ class NumberPanelViewTest : BaseViewTest() {
     @Test
     fun testRender() {
         assertRenders(view, "$PATH/render.png")
-    }
-
-    @Test
-    fun testRender_withDifferentColor() {
-        view.color = PaletteUtils.getAndroidTestColor(1)
-        assertRenders(view, "$PATH/render_different_color.png")
-    }
-
-    @Test
-    fun testRender_Reversed() {
-        prefs.isCheckmarkSequenceReversed = true
-        assertRenders(view, "$PATH/render_reversed.png")
-    }
-
-    @Test
-    fun testRender_withOffset() {
-        view.dataOffset = 3
-        assertRenders(view, "$PATH/render_offset.png")
     }
 
     @Test

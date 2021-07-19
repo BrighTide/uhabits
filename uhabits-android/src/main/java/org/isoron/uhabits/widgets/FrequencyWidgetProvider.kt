@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2016 Álinson Santos Xavier <isoron@gmail.com>
+ * Copyright (C) 2016-2021 Álinson Santos Xavier <git@axavier.org>
  *
  * This file is part of Loop Habit Tracker.
  *
@@ -19,12 +19,17 @@
 
 package org.isoron.uhabits.widgets
 
-import android.content.*
+import android.content.Context
 
 class FrequencyWidgetProvider : BaseWidgetProvider() {
     override fun getWidgetFromId(context: Context, id: Int): BaseWidget {
         val habits = getHabitsFromWidgetId(id)
-        if (habits.size == 1) return FrequencyWidget(context, id, habits[0])
-        else return StackWidget(context, id, StackWidgetType.FREQUENCY, habits)
+        return if (habits.size == 1) FrequencyWidget(
+            context,
+            id,
+            habits[0],
+            preferences.firstWeekdayInt
+        )
+        else StackWidget(context, id, StackWidgetType.FREQUENCY, habits)
     }
 }

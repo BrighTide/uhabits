@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2016 Álinson Santos Xavier <isoron@gmail.com>
+ * Copyright (C) 2016-2021 Álinson Santos Xavier <git@axavier.org>
  *
  * This file is part of Loop Habit Tracker.
  *
@@ -19,7 +19,9 @@
 
 package org.isoron.uhabits.widgets
 
-class WidgetDimensions(val portraitWidth: Int,
-                       val portraitHeight: Int,
-                       val landscapeWidth: Int,
-                       val landscapeHeight: Int)
+class WidgetDimensions(
+    val portraitWidth: Int,
+    val portraitHeight: Int,
+    val landscapeWidth: Int,
+    val landscapeHeight: Int
+)

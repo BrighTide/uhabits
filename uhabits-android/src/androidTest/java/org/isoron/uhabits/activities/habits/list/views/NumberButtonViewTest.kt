@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2016 Álinson Santos Xavier <isoron@gmail.com>
+ * Copyright (C) 2016-2021 Álinson Santos Xavier <git@axavier.org>
  *
  * This file is part of Loop Habit Tracker.
  *
@@ -19,14 +19,15 @@
 
 package org.isoron.uhabits.activities.habits.list.views
 
-import android.support.test.filters.*
-import android.support.test.runner.*
-import org.hamcrest.CoreMatchers.*
-import org.hamcrest.MatcherAssert.*
-import org.isoron.uhabits.*
-import org.isoron.uhabits.utils.*
-import org.junit.*
-import org.junit.runner.*
+import androidx.test.ext.junit.runners.AndroidJUnit4
+import androidx.test.filters.MediumTest
+import org.hamcrest.CoreMatchers.equalTo
+import org.hamcrest.MatcherAssert.assertThat
+import org.isoron.uhabits.BaseViewTest
+import org.isoron.uhabits.utils.PaletteUtils
+import org.junit.Before
+import org.junit.Test
+import org.junit.runner.RunWith
 
 @RunWith(AndroidJUnit4::class)
 @MediumTest
@@ -70,6 +71,13 @@ class NumberButtonViewTest : BaseViewTest() {
     fun testRender_aboveThreshold() {
         view.value = 500.0
         assertRenders(view, "$PATH/render_above.png")
+    }
+
+    @Test
+    fun testRender_emptyUnits() {
+        view.value = 500.0
+        view.units = ""
+        assertRenders(view, "$PATH/render_unitless.png")
     }
 
     @Test

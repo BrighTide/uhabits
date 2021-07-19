@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2015-2017 Álinson Santos Xavier <isoron@gmail.com>
+ * Copyright (C) 2016-2021 Álinson Santos Xavier <git@axavier.org>
  *
  * This file is part of Loop Habit Tracker.
  *
@@ -19,37 +19,41 @@
 
 package org.isoron.uhabits.automation
 
-import android.app.*
-import android.content.*
-import android.os.*
-import org.isoron.uhabits.*
-import org.isoron.uhabits.automation.FireSettingReceiver.*
-import org.isoron.uhabits.core.models.*
+import android.app.Activity
+import android.content.Intent
+import android.os.Bundle
+import org.isoron.uhabits.R
+import org.isoron.uhabits.core.models.Habit
 
 class EditSettingController(private val activity: Activity) {
 
     fun onSave(habit: Habit, action: Int) {
-        if (habit.getId() == null) return
+        if (habit.id == null) return
         val actionName = getActionName(action)
         val blurb = String.format("%s: %s", actionName, habit.name)
 
         val bundle = Bundle()
         bundle.putInt("action", action)
-        bundle.putLong("habit", habit.getId()!!)
+        bundle.putLong("habit", habit.id!!)
 
-        activity.setResult(Activity.RESULT_OK, Intent().apply {
-            putExtra(EXTRA_STRING_BLURB, blurb)
-            putExtra(EXTRA_BUNDLE, bundle)
-        })
+        activity.setResult(
+            Activity.RESULT_OK,
+            Intent().apply {
+                putExtra(EXTRA_STRING_BLURB, blurb)
+                putExtra(EXTRA_BUNDLE, bundle)
+            }
+        )
         activity.finish()
     }
 
     private fun getActionName(action: Int): String {
-        when (action) {
-            ACTION_CHECK -> return activity.getString(R.string.check)
-            ACTION_UNCHECK -> return activity.getString(R.string.uncheck)
-            ACTION_TOGGLE -> return activity.getString(R.string.toggle)
-            else -> return "???"
+        return when (action) {
+            ACTION_CHECK -> activity.getString(R.string.check)
+            ACTION_UNCHECK -> activity.getString(R.string.uncheck)
+            ACTION_TOGGLE -> activity.getString(R.string.toggle)
+            ACTION_INCREMENT -> activity.getString(R.string.increment)
+            ACTION_DECREMENT -> activity.getString(R.string.decrement)
+            else -> "???"
         }
     }
 }

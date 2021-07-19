@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2016 Álinson Santos Xavier <isoron@gmail.com>
+ * Copyright (C) 2016-2021 Álinson Santos Xavier <git@axavier.org>
  *
  * This file is part of Loop Habit Tracker.
  *
@@ -19,19 +19,28 @@
 
 package org.isoron.uhabits.widgets
 
-import android.app.*
-import android.content.*
-import android.view.*
-import org.isoron.uhabits.activities.common.views.*
-import org.isoron.uhabits.core.models.*
-import org.isoron.uhabits.utils.*
-import org.isoron.uhabits.widgets.views.*
+import android.app.PendingIntent
+import android.content.Context
+import android.view.View
+import org.isoron.platform.gui.AndroidDataView
+import org.isoron.platform.time.JavaLocalDateFormatter
+import org.isoron.uhabits.core.models.Habit
+import org.isoron.uhabits.core.ui.screens.habits.show.views.HistoryCardPresenter
+import org.isoron.uhabits.core.ui.views.HistoryChart
+import org.isoron.uhabits.core.ui.views.WidgetTheme
+import org.isoron.uhabits.core.utils.DateUtils
+import org.isoron.uhabits.widgets.views.GraphWidgetView
+import java.util.Locale
 
 class HistoryWidget(
-        context: Context,
-        id: Int,
-        private val habit: Habit
-) : BaseWidget(context, id) {
+    context: Context,
+    id: Int,
+    private val habit: Habit,
+    stacked: Boolean = false,
+) : BaseWidget(context, id, stacked) {
+
+    override val defaultHeight: Int = 250
+    override val defaultWidth: Int = 250
 
     override fun getOnClickPendingIntent(context: Context): PendingIntent {
         return pendingIntentFactory.showHabit(habit)
@@ -39,17 +48,32 @@ class HistoryWidget(
 
     override fun refreshData(view: View) {
         val widgetView = view as GraphWidgetView
-        (widgetView.dataView as HistoryChart).apply {
-            setColor(PaletteUtils.getColor(context, habit.color))
-            setCheckmarks(habit.checkmarks.allValues)
+        widgetView.setBackgroundAlpha(preferedBackgroundAlpha)
+        if (preferedBackgroundAlpha >= 255) widgetView.setShadowAlpha(0x4f)
+        val model = HistoryCardPresenter.buildState(
+            habit = habit,
+            firstWeekday = prefs.firstWeekday,
+            theme = WidgetTheme(),
+        )
+        (widgetView.dataView as AndroidDataView).apply {
+            (this.view as HistoryChart).series = model.series
         }
     }
 
     override fun buildView() =
-            GraphWidgetView(context, HistoryChart(context)).apply {
-                setTitle(habit.name)
+        GraphWidgetView(
+            context,
+            AndroidDataView(context).apply {
+                view = HistoryChart(
+                    today = DateUtils.getTodayWithOffset().toLocalDate(),
+                    paletteColor = habit.color,
+                    theme = WidgetTheme(),
+                    dateFormatter = JavaLocalDateFormatter(Locale.getDefault()),
+                    firstWeekday = prefs.firstWeekday,
+                    series = listOf(),
+                )
             }
-
-    override fun getDefaultHeight() = 250
-    override fun getDefaultWidth() = 250
+        ).apply {
+            setTitle(habit.name)
+        }
 }

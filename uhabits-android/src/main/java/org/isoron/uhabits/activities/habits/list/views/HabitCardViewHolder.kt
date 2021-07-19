@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2017 Álinson Santos Xavier <isoron@gmail.com>
+ * Copyright (C) 2016-2021 Álinson Santos Xavier <git@axavier.org>
  *
  * This file is part of Loop Habit Tracker.
  *
@@ -19,7 +19,6 @@
 
 package org.isoron.uhabits.activities.habits.list.views
 
-import android.support.v7.widget.*
-import android.view.*
+import androidx.recyclerview.widget.RecyclerView
 
-class HabitCardViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView)
+class HabitCardViewHolder(itemView: HabitCardView) : RecyclerView.ViewHolder(itemView)

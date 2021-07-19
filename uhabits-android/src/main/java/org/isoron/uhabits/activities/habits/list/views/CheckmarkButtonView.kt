@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2016 Álinson Santos Xavier <isoron@gmail.com>
+ * Copyright (C) 2016-2021 Álinson Santos Xavier <git@axavier.org>
  *
  * This file is part of Loop Habit Tracker.
  *
@@ -19,22 +19,42 @@
 
 package org.isoron.uhabits.activities.habits.list.views
 
-import android.content.*
-import android.graphics.*
-import android.text.*
-import android.view.*
-import android.view.View.MeasureSpec.*
-import com.google.auto.factory.*
-import org.isoron.androidbase.activities.*
-import org.isoron.uhabits.*
-import org.isoron.uhabits.core.models.Checkmark.*
-import org.isoron.uhabits.core.preferences.*
-import org.isoron.uhabits.utils.*
+import android.content.Context
+import android.graphics.Canvas
+import android.graphics.Color
+import android.graphics.Paint
+import android.graphics.RectF
+import android.text.TextPaint
+import android.view.HapticFeedbackConstants
+import android.view.View
+import android.view.View.MeasureSpec.EXACTLY
+import org.isoron.uhabits.R
+import org.isoron.uhabits.core.models.Entry
+import org.isoron.uhabits.core.models.Entry.Companion.NO
+import org.isoron.uhabits.core.models.Entry.Companion.SKIP
+import org.isoron.uhabits.core.models.Entry.Companion.UNKNOWN
+import org.isoron.uhabits.core.models.Entry.Companion.YES_AUTO
+import org.isoron.uhabits.core.models.Entry.Companion.YES_MANUAL
+import org.isoron.uhabits.core.preferences.Preferences
+import org.isoron.uhabits.inject.ActivityContext
+import org.isoron.uhabits.utils.dim
+import org.isoron.uhabits.utils.getFontAwesome
+import org.isoron.uhabits.utils.showMessage
+import org.isoron.uhabits.utils.sres
+import org.isoron.uhabits.utils.toMeasureSpec
+import javax.inject.Inject
 
-@AutoFactory
+class CheckmarkButtonViewFactory
+@Inject constructor(
+    @ActivityContext val context: Context,
+    val preferences: Preferences
+) {
+    fun create() = CheckmarkButtonView(context, preferences)
+}
+
 class CheckmarkButtonView(
-        @Provided @ActivityContext context: Context,
-        @Provided val preferences: Preferences
+    context: Context,
+    val preferences: Preferences
 ) : View(context),
     View.OnClickListener,
     View.OnLongClickListener {
@@ -51,7 +71,7 @@ class CheckmarkButtonView(
             invalidate()
         }
 
-    var onToggle: () -> Unit = {}
+    var onToggle: (Int) -> Unit = {}
     private var drawer = Drawer()
 
     init {
@@ -61,18 +81,19 @@ class CheckmarkButtonView(
     }
 
     fun performToggle() {
-        onToggle()
-        value = when (value) {
-            CHECKED_EXPLICITLY -> UNCHECKED
-            else -> CHECKED_EXPLICITLY
+        value = if (preferences.isSkipEnabled) {
+            Entry.nextToggleValueWithSkip(value)
+        } else {
+            Entry.nextToggleValueWithoutSkip(value)
         }
+        onToggle(value)
         performHapticFeedback(HapticFeedbackConstants.LONG_PRESS)
         invalidate()
     }
 
     override fun onClick(v: View) {
         if (preferences.isShortToggleEnabled) performToggle()
-        else showMessage(R.string.long_press_to_toggle)
+        else showMessage(resources.getString(R.string.long_press_to_toggle))
     }
 
     override fun onLongClick(v: View): Boolean {
@@ -88,36 +109,67 @@ class CheckmarkButtonView(
     override fun onMeasure(widthMeasureSpec: Int, heightMeasureSpec: Int) {
         val height = resources.getDimensionPixelSize(R.dimen.checkmarkHeight)
         val width = resources.getDimensionPixelSize(R.dimen.checkmarkWidth)
-        super.onMeasure(width.toMeasureSpec(EXACTLY),
-                        height.toMeasureSpec(EXACTLY))
+        super.onMeasure(
+            width.toMeasureSpec(EXACTLY),
+            height.toMeasureSpec(EXACTLY)
+        )
     }
 
     private inner class Drawer {
         private val rect = RectF()
-        private val lowContrastColor = sres.getColor(R.attr.lowContrastTextColor)
+        private val bgColor = sres.getColor(R.attr.cardBgColor)
+        private val lowContrastColor = sres.getColor(R.attr.contrast40)
+        private val mediumContrastColor = sres.getColor(R.attr.contrast60)
 
         private val paint = TextPaint().apply {
             typeface = getFontAwesome()
             isAntiAlias = true
             textAlign = Paint.Align.CENTER
-            textSize = dim(R.dimen.smallTextSize)
         }
 
         fun draw(canvas: Canvas) {
             paint.color = when (value) {
-                CHECKED_EXPLICITLY -> color
+                YES_MANUAL, YES_AUTO, SKIP -> color
+                NO -> {
+                    if (preferences.areQuestionMarksEnabled()) mediumContrastColor
+                    else lowContrastColor
+                }
                 else -> lowContrastColor
             }
             val id = when (value) {
-                UNCHECKED -> R.string.fa_times
+                SKIP -> R.string.fa_skipped
+                NO -> R.string.fa_times
+                UNKNOWN -> {
+                    if (preferences.areQuestionMarksEnabled()) R.string.fa_question
+                    else R.string.fa_times
+                }
                 else -> R.string.fa_check
             }
+            if (value == YES_AUTO) {
+                paint.strokeWidth = 5f
+                paint.style = Paint.Style.STROKE
+            } else {
+                paint.strokeWidth = 0f
+                paint.style = Paint.Style.FILL
+            }
+
+            paint.textSize = when (id) {
+                UNKNOWN -> dim(R.dimen.smallerTextSize)
+                else -> dim(R.dimen.smallTextSize)
+            }
+
             val label = resources.getString(id)
             val em = paint.measureText("m")
 
             rect.set(0f, 0f, width.toFloat(), height.toFloat())
             rect.offset(0f, 0.4f * em)
             canvas.drawText(label, rect.centerX(), rect.centerY(), paint)
+
+            if (value == YES_AUTO) {
+                paint.color = bgColor
+                paint.style = Paint.Style.FILL
+                canvas.drawText(label, rect.centerX(), rect.centerY(), paint)
+            }
         }
     }
 }

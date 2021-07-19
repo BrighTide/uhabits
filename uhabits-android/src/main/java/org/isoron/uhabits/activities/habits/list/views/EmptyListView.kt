@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2017 Álinson Santos Xavier <isoron@gmail.com>
+ * Copyright (C) 2016-2021 Álinson Santos Xavier <git@axavier.org>
  *
  * This file is part of Loop Habit Tracker.
  *
@@ -19,34 +19,69 @@
 
 package org.isoron.uhabits.activities.habits.list.views
 
-import android.content.*
-import android.view.*
-import android.view.Gravity.*
-import android.view.ViewGroup.LayoutParams.*
-import android.widget.*
-import org.isoron.androidbase.activities.*
-import org.isoron.uhabits.*
-import org.isoron.uhabits.utils.*
+import android.content.Context
+import android.view.Gravity.CENTER
+import android.view.View
+import android.view.ViewGroup.LayoutParams.MATCH_PARENT
+import android.view.ViewGroup.LayoutParams.WRAP_CONTENT
+import android.widget.LinearLayout
+import android.widget.TextView
+import org.isoron.uhabits.R
+import org.isoron.uhabits.utils.dp
+import org.isoron.uhabits.utils.getFontAwesome
+import org.isoron.uhabits.utils.sp
+import org.isoron.uhabits.utils.sres
+import org.isoron.uhabits.utils.str
 
 class EmptyListView(context: Context) : LinearLayout(context) {
+    var textTextView: TextView
+    var iconTextView: TextView
+
     init {
         orientation = VERTICAL
-        gravity = Gravity.CENTER
-        visibility = BaseRootView.GONE
+        gravity = CENTER
+        visibility = View.GONE
 
-        addView(TextView(context).apply {
+        iconTextView = TextView(context).apply {
             text = str(R.string.fa_star_half_o)
             typeface = getFontAwesome()
             textSize = sp(40.0f)
             gravity = CENTER
-            setTextColor(sres.getColor(R.attr.mediumContrastTextColor))
-        }, MATCH_PARENT, WRAP_CONTENT)
+            setTextColor(sres.getColor(R.attr.contrast60))
+        }
 
-        addView(TextView(context).apply {
+        addView(
+            iconTextView,
+            MATCH_PARENT,
+            WRAP_CONTENT
+        )
+
+        textTextView = TextView(context).apply {
             text = str(R.string.no_habits_found)
             gravity = CENTER
             setPadding(0, dp(20.0f).toInt(), 0, 0)
-            setTextColor(sres.getColor(R.attr.mediumContrastTextColor))
-        }, MATCH_PARENT, WRAP_CONTENT)
+            setTextColor(sres.getColor(R.attr.contrast60))
+        }
+        addView(
+            textTextView,
+            MATCH_PARENT,
+            WRAP_CONTENT
+        )
+    }
+
+    fun showDone() {
+        visibility = VISIBLE
+        iconTextView.text = str(R.string.fa_umbrella_beach)
+        textTextView.text = str(R.string.no_habits_left_to_do)
+    }
+
+    fun showEmpty() {
+        visibility = VISIBLE
+        iconTextView.text = str(R.string.fa_star_half_o)
+        textTextView.text = str(R.string.no_habits_found)
+    }
+
+    fun hide() {
+        visibility = GONE
     }
 }

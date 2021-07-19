@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2015-2017 Álinson Santos Xavier <isoron@gmail.com>
+ * Copyright (C) 2016-2021 Álinson Santos Xavier <git@axavier.org>
  *
  * This file is part of Loop Habit Tracker.
  *
@@ -19,17 +19,23 @@
 
 package org.isoron.uhabits.automation
 
-import android.content.*
-import dagger.*
-import org.isoron.uhabits.*
-import org.isoron.uhabits.core.models.*
-import org.isoron.uhabits.core.ui.widgets.*
-import org.isoron.uhabits.core.utils.*
-import org.isoron.uhabits.receivers.*
+import android.content.BroadcastReceiver
+import android.content.Context
+import android.content.Intent
+import dagger.Component
+import org.isoron.uhabits.HabitsApplication
+import org.isoron.uhabits.core.models.HabitList
+import org.isoron.uhabits.core.ui.widgets.WidgetBehavior
+import org.isoron.uhabits.core.utils.DateUtils
+import org.isoron.uhabits.inject.HabitsApplicationComponent
+import org.isoron.uhabits.receivers.ReceiverScope
 
 const val ACTION_CHECK = 0
 const val ACTION_UNCHECK = 1
 const val ACTION_TOGGLE = 2
+const val ACTION_INCREMENT = 3
+const val ACTION_DECREMENT = 4
+
 const val EXTRA_BUNDLE = "com.twofortyfouram.locale.intent.extra.BUNDLE"
 const val EXTRA_STRING_BLURB = "com.twofortyfouram.locale.intent.extra.BLURB"
 
@@ -40,34 +46,26 @@ class FireSettingReceiver : BroadcastReceiver() {
     override fun onReceive(context: Context, intent: Intent) {
         val app = context.applicationContext as HabitsApplication
         val component = DaggerFireSettingReceiver_ReceiverComponent
-                .builder()
-                .habitsApplicationComponent(app.component)
-                .build()
+            .builder()
+            .habitsApplicationComponent(app.component)
+            .build()
         allHabits = app.component.habitList
-        val args = parseIntent(intent) ?: return
-        val timestamp = DateUtils.getToday()
+        val args = SettingUtils.parseIntent(intent, allHabits) ?: return
+        val timestamp = DateUtils.getTodayWithOffset()
         val controller = component.widgetController
 
         when (args.action) {
             ACTION_CHECK -> controller.onAddRepetition(args.habit, timestamp)
             ACTION_UNCHECK -> controller.onRemoveRepetition(args.habit, timestamp)
             ACTION_TOGGLE -> controller.onToggleRepetition(args.habit, timestamp)
+            ACTION_INCREMENT -> controller.onIncrement(args.habit, timestamp, 1000)
+            ACTION_DECREMENT -> controller.onDecrement(args.habit, timestamp, 1000)
         }
     }
 
-    private fun parseIntent(intent: Intent): Arguments? {
-        val bundle = intent.getBundleExtra(EXTRA_BUNDLE) ?: return null
-        val action = bundle.getInt("action")
-        if (action < 0 || action > 2) return null
-        val habit = allHabits.getById(bundle.getLong("habit")) ?: return null
-        return Arguments(action, habit)
-    }
-
     @ReceiverScope
-    @Component(dependencies = arrayOf(HabitsApplicationComponent::class))
+    @Component(dependencies = [HabitsApplicationComponent::class])
     internal interface ReceiverComponent {
         val widgetController: WidgetBehavior
     }
-
-    private class Arguments(var action: Int, var habit: Habit)
 }

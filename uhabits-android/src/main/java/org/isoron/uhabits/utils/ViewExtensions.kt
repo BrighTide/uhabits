@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2017 Álinson Santos Xavier <isoron@gmail.com>
+ * Copyright (C) 2016-2021 Álinson Santos Xavier <git@axavier.org>
  *
  * This file is part of Loop Habit Tracker.
  *
@@ -19,22 +19,38 @@
 
 package org.isoron.uhabits.utils
 
-import android.graphics.*
-import android.support.annotation.*
-import android.support.design.widget.*
-import android.support.v7.widget.Toolbar
-import android.view.*
-import android.view.ViewGroup.LayoutParams.*
-import android.widget.*
-import android.widget.RelativeLayout.*
-import org.isoron.androidbase.utils.*
-import org.isoron.uhabits.*
+import android.app.Activity
+import android.content.ActivityNotFoundException
+import android.content.Intent
+import android.graphics.Color
+import android.graphics.drawable.ColorDrawable
+import android.os.Handler
+import android.view.LayoutInflater
+import android.view.View
+import android.view.ViewGroup
+import android.view.ViewGroup.LayoutParams.MATCH_PARENT
+import android.view.ViewGroup.LayoutParams.WRAP_CONTENT
+import android.widget.RelativeLayout
+import android.widget.RelativeLayout.ALIGN_PARENT_BOTTOM
+import android.widget.RelativeLayout.ALIGN_PARENT_TOP
+import android.widget.RelativeLayout.BELOW
+import android.widget.TextView
+import androidx.annotation.StringRes
+import androidx.appcompat.app.AppCompatActivity
+import androidx.appcompat.widget.Toolbar
+import androidx.core.content.FileProvider
+import com.google.android.material.snackbar.Snackbar
+import org.isoron.uhabits.R
+import org.isoron.uhabits.core.models.PaletteColor
+import java.io.File
 
-fun RelativeLayout.addBelow(view: View,
-                            subject: View,
-                            width: Int = MATCH_PARENT,
-                            height: Int = WRAP_CONTENT,
-                            applyCustomRules: (params: RelativeLayout.LayoutParams) -> Unit = {}) {
+fun RelativeLayout.addBelow(
+    view: View,
+    subject: View,
+    width: Int = MATCH_PARENT,
+    height: Int = WRAP_CONTENT,
+    applyCustomRules: (params: RelativeLayout.LayoutParams) -> Unit = {}
+) {
 
     view.layoutParams = RelativeLayout.LayoutParams(width, height).apply {
         addRule(BELOW, subject.id)
@@ -44,9 +60,11 @@ fun RelativeLayout.addBelow(view: View,
     this.addView(view)
 }
 
-fun RelativeLayout.addAtBottom(view: View,
-                               width: Int = MATCH_PARENT,
-                               height: Int = WRAP_CONTENT) {
+fun RelativeLayout.addAtBottom(
+    view: View,
+    width: Int = MATCH_PARENT,
+    height: Int = WRAP_CONTENT
+) {
 
     view.layoutParams = RelativeLayout.LayoutParams(width, height).apply {
         addRule(ALIGN_PARENT_BOTTOM)
@@ -55,9 +73,11 @@ fun RelativeLayout.addAtBottom(view: View,
     this.addView(view)
 }
 
-fun RelativeLayout.addAtTop(view: View,
-                            width: Int = MATCH_PARENT,
-                            height: Int = WRAP_CONTENT) {
+fun RelativeLayout.addAtTop(
+    view: View,
+    width: Int = MATCH_PARENT,
+    height: Int = WRAP_CONTENT
+) {
 
     view.layoutParams = RelativeLayout.LayoutParams(width, height).apply {
         addRule(ALIGN_PARENT_TOP)
@@ -71,10 +91,10 @@ fun ViewGroup.buildToolbar(): Toolbar {
     return inflater.inflate(R.layout.toolbar, null) as Toolbar
 }
 
-fun View.showMessage(@StringRes stringId: Int) {
+fun View.showMessage(msg: String) {
     try {
-        val snackbar = Snackbar.make(this, stringId, Snackbar.LENGTH_SHORT)
-        val tvId = android.support.design.R.id.snackbar_text
+        val snackbar = Snackbar.make(this, msg, Snackbar.LENGTH_SHORT)
+        val tvId = R.id.snackbar_text
         val tv = snackbar.view.findViewById<TextView>(tvId)
         tv?.setTextColor(Color.WHITE)
         snackbar.show()
@@ -83,11 +103,83 @@ fun View.showMessage(@StringRes stringId: Int) {
     }
 }
 
+fun Activity.showMessage(msg: String) {
+    this.findViewById<View>(android.R.id.content).showMessage(msg)
+}
+
+fun Activity.showSendFileScreen(archiveFilename: String) {
+    val file = File(archiveFilename)
+    val fileUri = FileProvider.getUriForFile(this, "org.isoron.uhabits", file)
+    this.startActivitySafely(
+        Intent().apply {
+            action = Intent.ACTION_SEND
+            type = "application/zip"
+            putExtra(Intent.EXTRA_STREAM, fileUri)
+            flags = Intent.FLAG_GRANT_READ_URI_PERMISSION
+        }
+    )
+}
+
+fun Activity.startActivitySafely(intent: Intent) {
+    try {
+        startActivity(intent)
+    } catch (e: ActivityNotFoundException) {
+        this.showMessage(resources.getString(R.string.activity_not_found))
+    }
+}
+
+fun Activity.showSendEmailScreen(@StringRes toId: Int, @StringRes subjectId: Int, content: String?) {
+    val to = this.getString(toId)
+    val subject = this.getString(subjectId)
+    this.startActivity(
+        Intent().apply {
+            action = Intent.ACTION_SEND
+            type = "message/rfc822"
+            putExtra(Intent.EXTRA_EMAIL, arrayOf(to))
+            putExtra(Intent.EXTRA_SUBJECT, subject)
+            putExtra(Intent.EXTRA_TEXT, content)
+        }
+    )
+}
+
+fun Activity.restartWithFade(cls: Class<*>?) {
+    Handler().postDelayed(
+        {
+            finish()
+            overridePendingTransition(android.R.anim.fade_in, android.R.anim.fade_out)
+            startActivity(Intent(this, cls))
+        },
+        500,
+    ) // HACK: Let the menu disappear first
+}
+
+fun View.setupToolbar(
+    toolbar: Toolbar,
+    title: String,
+    color: PaletteColor,
+    displayHomeAsUpEnabled: Boolean = true,
+) {
+    toolbar.elevation = InterfaceUtils.dpToPixels(context, 2f)
+    val res = StyledResources(context)
+    toolbar.title = title
+    val toolbarColor = if (!res.getBoolean(R.attr.useHabitColorAsPrimary)) {
+        StyledResources(context).getColor(R.attr.colorPrimary)
+    } else {
+        color.toThemedAndroidColor(context)
+    }
+    val darkerColor = ColorUtils.mixColors(toolbarColor, Color.BLACK, 0.75f)
+    toolbar.background = ColorDrawable(toolbarColor)
+    val activity = context as AppCompatActivity
+    activity.window.statusBarColor = darkerColor
+    activity.setSupportActionBar(toolbar)
+    activity.supportActionBar?.setDisplayHomeAsUpEnabled(displayHomeAsUpEnabled)
+}
+
 fun Int.toMeasureSpec(mode: Int) =
-        View.MeasureSpec.makeMeasureSpec(this, mode)
+    View.MeasureSpec.makeMeasureSpec(this, mode)
 
 fun Float.toMeasureSpec(mode: Int) =
-        View.MeasureSpec.makeMeasureSpec(toInt(), mode)
+    View.MeasureSpec.makeMeasureSpec(toInt(), mode)
 
 fun View.isRTL() = InterfaceUtils.isLayoutRtl(this)
 fun View.getFontAwesome() = InterfaceUtils.getFontAwesome(context)!!

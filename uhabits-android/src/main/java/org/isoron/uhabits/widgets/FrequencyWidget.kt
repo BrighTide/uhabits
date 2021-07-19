@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2016 Álinson Santos Xavier <isoron@gmail.com>
+ * Copyright (C) 2016-2021 Álinson Santos Xavier <git@axavier.org>
  *
  * This file is part of Loop Habit Tracker.
  *
@@ -19,34 +19,39 @@
 
 package org.isoron.uhabits.widgets
 
-import android.content.*
-import android.view.*
-import org.isoron.uhabits.activities.common.views.*
-import org.isoron.uhabits.core.models.*
-import org.isoron.uhabits.utils.*
-import org.isoron.uhabits.widgets.views.*
+import android.app.PendingIntent
+import android.content.Context
+import android.view.View
+import org.isoron.uhabits.activities.common.views.FrequencyChart
+import org.isoron.uhabits.core.models.Habit
+import org.isoron.uhabits.utils.toThemedAndroidColor
+import org.isoron.uhabits.widgets.views.GraphWidgetView
 
 class FrequencyWidget(
-        context: Context,
-        widgetId: Int,
-        private val habit: Habit
-) : BaseWidget(context, widgetId) {
+    context: Context,
+    widgetId: Int,
+    private val habit: Habit,
+    private val firstWeekday: Int,
+    stacked: Boolean = false,
+) : BaseWidget(context, widgetId, stacked) {
+    override val defaultHeight: Int = 200
+    override val defaultWidth: Int = 200
 
-    override fun getOnClickPendingIntent(context: Context) =
-            pendingIntentFactory.showHabit(habit)
+    override fun getOnClickPendingIntent(context: Context): PendingIntent =
+        pendingIntentFactory.showHabit(habit)
 
     override fun refreshData(v: View) {
         val widgetView = v as GraphWidgetView
         widgetView.setTitle(habit.name)
+        widgetView.setBackgroundAlpha(preferedBackgroundAlpha)
+        if (preferedBackgroundAlpha >= 255) widgetView.setShadowAlpha(0x4f)
         (widgetView.dataView as FrequencyChart).apply {
-            setColor(PaletteUtils.getColor(context, habit.color))
-            setFrequency(habit.repetitions.weekdayFrequency)
+            setFirstWeekday(firstWeekday)
+            setColor(habit.color.toThemedAndroidColor(context))
+            setFrequency(habit.originalEntries.computeWeekdayFrequency(habit.isNumerical))
         }
     }
 
     override fun buildView() =
-            GraphWidgetView(context, FrequencyChart(context))
-
-    override fun getDefaultHeight() = 200
-    override fun getDefaultWidth() = 200
+        GraphWidgetView(context, FrequencyChart(context))
 }

@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2016 Álinson Santos Xavier <isoron@gmail.com>
+ * Copyright (C) 2016-2021 Álinson Santos Xavier <git@axavier.org>
  *
  * This file is part of Loop Habit Tracker.
  *
@@ -19,17 +19,19 @@
 
 package org.isoron.uhabits
 
-import android.app.*
-import android.content.*
-import org.isoron.androidbase.*
-import org.isoron.uhabits.core.database.*
-import org.isoron.uhabits.core.reminders.*
-import org.isoron.uhabits.core.ui.*
-import org.isoron.uhabits.utils.*
-import org.isoron.uhabits.widgets.*
-import java.io.*
-import java.util.Calendar;
-import android.app.PendingIntent;
+import android.app.Application
+import android.content.Context
+import org.isoron.uhabits.core.database.UnsupportedDatabaseVersionException
+import org.isoron.uhabits.core.reminders.ReminderScheduler
+import org.isoron.uhabits.core.ui.NotificationTray
+import org.isoron.uhabits.core.utils.DateUtils.Companion.setStartDayOffset
+import org.isoron.uhabits.inject.AppContextModule
+import org.isoron.uhabits.inject.DaggerHabitsApplicationComponent
+import org.isoron.uhabits.inject.HabitsApplicationComponent
+import org.isoron.uhabits.inject.HabitsModule
+import org.isoron.uhabits.utils.DatabaseUtils
+import org.isoron.uhabits.widgets.WidgetUpdater
+import java.io.File
 
 /**
  * The Android application for Loop Habit Tracker.
@@ -44,10 +46,6 @@ class HabitsApplication : Application() {
     override fun onCreate() {
         super.onCreate()
         context = this
-        HabitsApplication.component = DaggerHabitsApplicationComponent
-                .builder()
-                .appContextModule(AppContextModule(context))
-                .build()
 
         if (isTestMode()) {
             val db = DatabaseUtils.getDatabaseFile(context)
@@ -62,8 +60,29 @@ class HabitsApplication : Application() {
             DatabaseUtils.initializeDatabase(context)
         }
 
-        widgetUpdater = component.widgetUpdater
-        widgetUpdater.startListening()
+        val db = DatabaseUtils.getDatabaseFile(this)
+        HabitsApplication.component = DaggerHabitsApplicationComponent
+            .builder()
+            .appContextModule(AppContextModule(context))
+            .habitsModule(HabitsModule(db))
+            .build()
+
+        val prefs = component.preferences
+        prefs.lastAppVersion = BuildConfig.VERSION_CODE
+
+        if (prefs.isMidnightDelayEnabled) {
+            setStartDayOffset(3, 0)
+        } else {
+            setStartDayOffset(0, 0)
+        }
+
+        val habitList = component.habitList
+        for (h in habitList) h.recompute()
+
+        widgetUpdater = component.widgetUpdater.apply {
+            startListening()
+            scheduleStartDayWidgetUpdate()
+        }
 
         reminderScheduler = component.reminderScheduler
         reminderScheduler.startListening()
@@ -72,9 +91,6 @@ class HabitsApplication : Application() {
         notificationTray.startListening()
 
         reminderScheduler.sys.scheduleBackup()
-
-        val prefs = component.preferences
-        prefs.setLastAppVersion(BuildConfig.VERSION_CODE)
 
         val taskRunner = component.taskRunner
         taskRunner.execute {
@@ -97,11 +113,11 @@ class HabitsApplication : Application() {
         lateinit var component: HabitsApplicationComponent
 
         fun isTestMode(): Boolean {
-            try {
+            return try {
                 Class.forName("org.isoron.uhabits.BaseAndroidTest")
-                return true
+                true
             } catch (e: ClassNotFoundException) {
-                return false
+                false
             }
         }
     }

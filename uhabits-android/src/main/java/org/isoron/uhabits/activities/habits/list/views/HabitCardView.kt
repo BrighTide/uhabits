@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2016 Álinson Santos Xavier <isoron@gmail.com>
+ * Copyright (C) 2016-2021 Álinson Santos Xavier <git@axavier.org>
  *
  * This file is part of Loop Habit Tracker.
  *
@@ -19,29 +19,48 @@
 
 package org.isoron.uhabits.activities.habits.list.views
 
-import android.content.*
-import android.os.*
-import android.os.Build.VERSION.*
-import android.os.Build.VERSION_CODES.*
-import android.text.*
-import android.view.*
-import android.view.ViewGroup.LayoutParams.*
-import android.widget.*
-import com.google.auto.factory.*
-import org.isoron.androidbase.activities.*
-import org.isoron.uhabits.*
-import org.isoron.uhabits.activities.common.views.*
-import org.isoron.uhabits.core.models.*
-import org.isoron.uhabits.core.ui.screens.habits.list.*
-import org.isoron.uhabits.core.utils.*
-import org.isoron.uhabits.utils.*
+import android.content.Context
+import android.graphics.text.LineBreaker.BREAK_STRATEGY_BALANCED
+import android.os.Build.VERSION.SDK_INT
+import android.os.Build.VERSION_CODES.M
+import android.os.Handler
+import android.os.Looper
+import android.text.TextUtils
+import android.view.Gravity
+import android.view.View
+import android.view.ViewGroup.LayoutParams.MATCH_PARENT
+import android.view.ViewGroup.LayoutParams.WRAP_CONTENT
+import android.widget.FrameLayout
+import android.widget.LinearLayout
+import android.widget.TextView
+import org.isoron.uhabits.R
+import org.isoron.uhabits.activities.common.views.RingView
+import org.isoron.uhabits.core.models.Habit
+import org.isoron.uhabits.core.models.ModelObservable
+import org.isoron.uhabits.core.models.Timestamp
+import org.isoron.uhabits.core.ui.screens.habits.list.ListHabitsBehavior
+import org.isoron.uhabits.core.utils.DateUtils
+import org.isoron.uhabits.inject.ActivityContext
+import org.isoron.uhabits.utils.dp
+import org.isoron.uhabits.utils.sres
+import org.isoron.uhabits.utils.toThemedAndroidColor
+import javax.inject.Inject
 
-@AutoFactory
+class HabitCardViewFactory
+@Inject constructor(
+    @ActivityContext val context: Context,
+    private val checkmarkPanelFactory: CheckmarkPanelViewFactory,
+    private val numberPanelFactory: NumberPanelViewFactory,
+    private val behavior: ListHabitsBehavior
+) {
+    fun create() = HabitCardView(context, checkmarkPanelFactory, numberPanelFactory, behavior)
+}
+
 class HabitCardView(
-        @Provided @ActivityContext context: Context,
-        @Provided private val checkmarkPanelFactory: CheckmarkPanelViewFactory,
-        @Provided private val numberPanelFactory: NumberPanelViewFactory,
-        @Provided private val behavior: ListHabitsBehavior
+    @ActivityContext context: Context,
+    checkmarkPanelFactory: CheckmarkPanelViewFactory,
+    numberPanelFactory: NumberPanelViewFactory,
+    private val behavior: ListHabitsBehavior
 ) : FrameLayout(context),
     ModelObservable.Listener {
 
@@ -70,10 +89,10 @@ class HabitCardView(
         }
 
     var score
-        get() = scoreRing.percentage.toDouble()
+        get() = scoreRing.getPercentage().toDouble()
         set(value) {
-            scoreRing.percentage = value.toFloat()
-            scoreRing.precision = 1.0f / 16
+            scoreRing.setPercentage(value.toFloat())
+            scoreRing.setPrecision(1.0f / 16)
         }
 
     var unit
@@ -95,7 +114,7 @@ class HabitCardView(
             numberPanel.threshold = value
         }
 
-    private var checkmarkPanel: CheckmarkPanelView
+    var checkmarkPanel: CheckmarkPanelView
     private var numberPanel: NumberPanelView
     private var innerFrame: LinearLayout
     private var label: TextView
@@ -117,13 +136,13 @@ class HabitCardView(
             maxLines = 2
             ellipsize = TextUtils.TruncateAt.END
             layoutParams = LinearLayout.LayoutParams(0, WRAP_CONTENT, 1f)
-            if (SDK_INT >= M) breakStrategy = Layout.BREAK_STRATEGY_BALANCED
+            if (SDK_INT >= M) breakStrategy = BREAK_STRATEGY_BALANCED
         }
 
         checkmarkPanel = checkmarkPanelFactory.create().apply {
-            onToggle = { timestamp ->
+            onToggle = { timestamp, value ->
                 triggerRipple(timestamp)
-                habit?.let { behavior.onToggle(it, timestamp) }
+                habit?.let { behavior.onToggle(it, timestamp, value) }
             }
         }
 
@@ -139,7 +158,7 @@ class HabitCardView(
             gravity = Gravity.CENTER_VERTICAL
             orientation = LinearLayout.HORIZONTAL
             layoutParams = LinearLayout.LayoutParams(MATCH_PARENT, WRAP_CONTENT)
-            if (SDK_INT >= LOLLIPOP) elevation = dp(1f)
+            elevation = dp(1f)
 
             addView(scoreRing)
             addView(label)
@@ -147,14 +166,13 @@ class HabitCardView(
             addView(numberPanel)
 
             setOnTouchListener { v, event ->
-                if (SDK_INT >= LOLLIPOP)
-                    v.background.setHotspot(event.x, event.y)
+                v.background.setHotspot(event.x, event.y)
                 false
             }
         }
 
         clipToPadding = false
-        layoutParams = FrameLayout.LayoutParams(MATCH_PARENT, WRAP_CONTENT)
+        layoutParams = LayoutParams(MATCH_PARENT, WRAP_CONTENT)
         val margin = dp(3f).toInt()
         setPadding(margin, 0, margin, margin)
         addView(innerFrame)
@@ -172,7 +190,7 @@ class HabitCardView(
     }
 
     fun triggerRipple(timestamp: Timestamp) {
-        val today = DateUtils.getToday()
+        val today = DateUtils.getTodayWithOffset()
         val offset = timestamp.daysUntil(today) - dataOffset
         val button = checkmarkPanel.buttons[offset]
         val y = button.height / 2.0f
@@ -194,8 +212,8 @@ class HabitCardView(
 
         fun getActiveColor(habit: Habit): Int {
             return when (habit.isArchived) {
-                true -> sres.getColor(R.attr.mediumContrastTextColor)
-                false -> PaletteUtils.getColor(context, habit.color)
+                true -> sres.getColor(R.attr.contrast60)
+                false -> habit.color.toThemedAndroidColor(context)
             }
         }
 
@@ -205,7 +223,7 @@ class HabitCardView(
             setTextColor(c)
         }
         scoreRing.apply {
-            color = c
+            setColor(c)
         }
         checkmarkPanel.apply {
             color = c
@@ -227,21 +245,15 @@ class HabitCardView(
 
     private fun triggerRipple(x: Float, y: Float) {
         val background = innerFrame.background
-        if (SDK_INT >= LOLLIPOP) background.setHotspot(x, y)
-        background.state = intArrayOf(android.R.attr.state_pressed,
-                                      android.R.attr.state_enabled)
+        background.setHotspot(x, y)
+        background.state = intArrayOf(
+            android.R.attr.state_pressed,
+            android.R.attr.state_enabled
+        )
         Handler().postDelayed({ background.state = intArrayOf() }, 25)
     }
 
     private fun updateBackground(isSelected: Boolean) {
-        if (SDK_INT < LOLLIPOP) {
-            val background = when (isSelected) {
-                true -> sres.getDrawable(R.attr.selectedBackground)
-                false -> sres.getDrawable(R.attr.cardBackground)
-            }
-            innerFrame.setBackgroundDrawable(background)
-            return
-        }
 
         val background = when (isSelected) {
             true -> R.drawable.selected_box

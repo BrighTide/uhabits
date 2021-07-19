@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2016 Álinson Santos Xavier <isoron@gmail.com>
+ * Copyright (C) 2016-2021 Álinson Santos Xavier <git@axavier.org>
  *
  * This file is part of Loop Habit Tracker.
  *
@@ -19,25 +19,41 @@
 
 package org.isoron.uhabits.activities.habits.list.views
 
-import android.content.*
-import android.os.*
-import android.support.v7.widget.*
-import android.support.v7.widget.helper.*
-import android.support.v7.widget.helper.ItemTouchHelper.*
-import android.view.*
-import com.google.auto.factory.*
-import dagger.*
-import org.isoron.androidbase.activities.*
+import android.content.Context
+import android.os.Bundle
+import android.os.Parcelable
+import android.view.GestureDetector
+import android.view.MotionEvent
+import android.view.View
+import androidx.recyclerview.widget.ItemTouchHelper
+import androidx.recyclerview.widget.ItemTouchHelper.DOWN
+import androidx.recyclerview.widget.ItemTouchHelper.END
+import androidx.recyclerview.widget.ItemTouchHelper.START
+import androidx.recyclerview.widget.ItemTouchHelper.UP
+import androidx.recyclerview.widget.LinearLayoutManager
+import androidx.recyclerview.widget.RecyclerView
+import dagger.Lazy
 import org.isoron.uhabits.R
-import org.isoron.uhabits.activities.common.views.*
-import org.isoron.uhabits.core.models.*
+import org.isoron.uhabits.activities.common.views.BundleSavedState
+import org.isoron.uhabits.core.models.Habit
+import org.isoron.uhabits.inject.ActivityContext
+import javax.inject.Inject
 
-@AutoFactory
+class HabitCardListViewFactory
+@Inject constructor(
+    @ActivityContext val context: Context,
+    val adapter: HabitCardListAdapter,
+    val cardViewFactory: HabitCardViewFactory,
+    val controller: Lazy<HabitCardListController>
+) {
+    fun create() = HabitCardListView(context, adapter, cardViewFactory, controller)
+}
+
 class HabitCardListView(
-        @Provided @ActivityContext context: Context,
-        @Provided private val adapter: HabitCardListAdapter,
-        @Provided private val cardViewFactory: HabitCardViewFactory,
-        @Provided private val controller: Lazy<HabitCardListController>
+    @ActivityContext context: Context,
+    private val adapter: HabitCardListAdapter,
+    private val cardViewFactory: HabitCardViewFactory,
+    private val controller: Lazy<HabitCardListController>
 ) : RecyclerView(context, null, R.attr.scrollableRecyclerViewStyle) {
 
     var checkmarkCount: Int = 0
@@ -46,8 +62,8 @@ class HabitCardListView(
         set(value) {
             field = value
             attachedHolders
-                    .map { it.itemView as HabitCardView }
-                    .forEach { it.dataOffset = value }
+                .map { it.itemView as HabitCardView }
+                .forEach { it.dataOffset = value }
         }
 
     private val attachedHolders = mutableListOf<HabitCardViewHolder>()
@@ -62,15 +78,17 @@ class HabitCardListView(
         super.setAdapter(adapter)
     }
 
-    fun createHabitCardView(): View {
+    fun createHabitCardView(): HabitCardView {
         return cardViewFactory.create()
     }
 
-    fun bindCardView(holder: HabitCardViewHolder,
-                     habit: Habit,
-                     score: Double,
-                     checkmarks: IntArray,
-                     selected: Boolean): View {
+    fun bindCardView(
+        holder: HabitCardViewHolder,
+        habit: Habit,
+        score: Double,
+        checkmarks: IntArray,
+        selected: Boolean
+    ): View {
         val cardView = holder.itemView as HabitCardView
         cardView.habit = habit
         cardView.isSelected = selected
@@ -79,7 +97,7 @@ class HabitCardListView(
         cardView.dataOffset = dataOffset
         cardView.score = score
         cardView.unit = habit.unit
-        cardView.threshold = habit.targetValue
+        cardView.threshold = habit.targetValue / habit.frequency.denominator
 
         val detector = GestureDetector(context, CardViewGestureDetector(holder))
         cardView.setOnTouchListener { _, ev ->
@@ -91,6 +109,7 @@ class HabitCardListView(
     }
 
     fun attachCardView(holder: HabitCardViewHolder) {
+        (holder.itemView as HabitCardView).dataOffset = dataOffset
         attachedHolders.add(holder)
     }
 
@@ -113,7 +132,7 @@ class HabitCardListView(
             super.onRestoreInstanceState(state)
             return
         }
-        dataOffset = state.bundle.getInt("dataOffset")
+        dataOffset = state.bundle!!.getInt("dataOffset")
         super.onRestoreInstanceState(state.superState)
     }
 
@@ -133,7 +152,7 @@ class HabitCardListView(
     }
 
     private inner class CardViewGestureDetector(
-            private val holder: HabitCardViewHolder
+        private val holder: HabitCardViewHolder
     ) : GestureDetector.SimpleOnGestureListener() {
 
         override fun onLongPress(e: MotionEvent) {
@@ -150,20 +169,26 @@ class HabitCardListView(
     }
 
     inner class TouchHelperCallback : ItemTouchHelper.Callback() {
-        override fun getMovementFlags(recyclerView: RecyclerView,
-                                      viewHolder: RecyclerView.ViewHolder): Int {
+        override fun getMovementFlags(
+            recyclerView: RecyclerView,
+            viewHolder: ViewHolder
+        ): Int {
             return makeMovementFlags(UP or DOWN, START or END)
         }
 
-        override fun onMove(recyclerView: RecyclerView,
-                            from: RecyclerView.ViewHolder,
-                            to: RecyclerView.ViewHolder): Boolean {
+        override fun onMove(
+            recyclerView: RecyclerView,
+            from: ViewHolder,
+            to: ViewHolder
+        ): Boolean {
             controller.get().drop(from.adapterPosition, to.adapterPosition)
             return true
         }
 
-        override fun onSwiped(viewHolder: RecyclerView.ViewHolder,
-                              direction: Int) {
+        override fun onSwiped(
+            viewHolder: ViewHolder,
+            direction: Int
+        ) {
         }
 
         override fun isItemViewSwipeEnabled() = false

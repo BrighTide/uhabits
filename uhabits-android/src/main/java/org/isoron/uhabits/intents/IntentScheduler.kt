@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2016 Álinson Santos Xavier <isoron@gmail.com>
+ * Copyright (C) 2016-2021 Álinson Santos Xavier <git@axavier.org>
  *
  * This file is part of Loop Habit Tracker.
  *
@@ -19,37 +19,64 @@
 
 package org.isoron.uhabits.intents
 
-import android.app.*
-import android.app.AlarmManager.*
-import android.content.*
-import android.content.Context.*
-import android.os.Build.VERSION.*
-import android.os.Build.VERSION_CODES.*
-import android.os.SystemClock
-import org.isoron.androidbase.*
-import org.isoron.uhabits.*
-import org.isoron.uhabits.core.*
-import org.isoron.uhabits.core.models.*
-import org.isoron.uhabits.core.reminders.*
+// import android.app.*
+// import android.app.AlarmManager.*
+// import android.content.*
+// import android.content.Context.*
+// import android.os.Build.VERSION.*
+// import android.os.Build.VERSION_CODES.*
+// import android.os.SystemClock
+// import org.isoron.androidbase.*
+// import org.isoron.uhabits.*
+// import org.isoron.uhabits.core.*
+// import org.isoron.uhabits.core.models.*
+// import org.isoron.uhabits.core.reminders.*
+// import java.util.*
+// import javax.inject.*
+import android.app.AlarmManager
+import android.app.AlarmManager.RTC
+import android.app.AlarmManager.RTC_WAKEUP
+import android.app.PendingIntent
+import android.content.Context
+import android.content.Context.ALARM_SERVICE
+import android.os.Build.VERSION.SDK_INT
+import android.os.Build.VERSION_CODES.M
+import android.util.Log
+import org.isoron.uhabits.core.AppScope
+import org.isoron.uhabits.core.models.Habit
+import org.isoron.uhabits.core.reminders.ReminderScheduler.SchedulerResult
+import org.isoron.uhabits.core.reminders.ReminderScheduler.SystemScheduler
+import org.isoron.uhabits.core.utils.DateFormats
+import org.isoron.uhabits.inject.AppContext
 import java.util.*
-import javax.inject.*
+import javax.inject.Inject
+import kotlin.math.min
 
 @AppScope
 class IntentScheduler
 @Inject constructor(
-        @AppContext context: Context,
-        private val pendingIntents: PendingIntentFactory,
-        private val logger: HabitLogger
-) : ReminderScheduler.SystemScheduler {
+    @AppContext context: Context,
+    private val pendingIntents: PendingIntentFactory
+) : SystemScheduler {
 
     private val manager =
-            context.getSystemService(ALARM_SERVICE) as AlarmManager
+        context.getSystemService(ALARM_SERVICE) as AlarmManager
 
-    fun schedule(timestamp: Long, intent: PendingIntent) {
+    private fun schedule(timestamp: Long, intent: PendingIntent, alarmType: Int): SchedulerResult {
+        val now = System.currentTimeMillis()
+        Log.d("IntentScheduler", "timestamp=$timestamp now=$now")
+        if (timestamp < now) {
+            Log.e(
+                "IntentScheduler",
+                "Ignoring attempt to schedule intent in the past."
+            )
+            return SchedulerResult.IGNORED
+        }
         if (SDK_INT >= M)
-            manager.setExactAndAllowWhileIdle(RTC_WAKEUP, timestamp, intent)
+            manager.setExactAndAllowWhileIdle(alarmType, timestamp, intent)
         else
-            manager.setExact(RTC_WAKEUP, timestamp, intent)
+            manager.setExact(alarmType, timestamp, intent)
+        return SchedulerResult.OK
     }
 
     override fun scheduleBackup() {
@@ -65,11 +92,33 @@ class IntentScheduler
         manager.setInexactRepeating(RTC_WAKEUP, calendar.getTimeInMillis(), AlarmManager.INTERVAL_DAY, intent)
     }
 
-    override fun scheduleShowReminder(reminderTime: Long,
-                                      habit: Habit,
-                                      timestamp: Long) {
+    override fun scheduleShowReminder(
+        reminderTime: Long,
+        habit: Habit,
+        timestamp: Long
+    ): SchedulerResult {
         val intent = pendingIntents.showReminder(habit, reminderTime, timestamp)
-        schedule(reminderTime, intent)
-        logger.logReminderScheduled(habit, reminderTime)
+        logReminderScheduled(habit, reminderTime)
+        return schedule(reminderTime, intent, RTC_WAKEUP)
+    }
+
+    override fun scheduleWidgetUpdate(updateTime: Long): SchedulerResult {
+        val intent = pendingIntents.updateWidgets()
+        return schedule(updateTime, intent, RTC)
+    }
+
+    override fun log(componentName: String, msg: String) {
+        Log.d(componentName, msg)
+    }
+
+    private fun logReminderScheduled(habit: Habit, reminderTime: Long) {
+        val min = min(5, habit.name.length)
+        val name = habit.name.substring(0, min)
+        val df = DateFormats.getBackupDateFormat()
+        val time = df.format(Date(reminderTime))
+        Log.i(
+            "ReminderHelper",
+            String.format("Setting alarm (%s): %s", time, name)
+        )
     }
 }

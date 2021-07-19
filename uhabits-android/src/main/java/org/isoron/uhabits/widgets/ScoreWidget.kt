@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2016 Álinson Santos Xavier <isoron@gmail.com>
+ * Copyright (C) 2016-2021 Álinson Santos Xavier <git@axavier.org>
  *
  * This file is part of Loop Habit Tracker.
  *
@@ -19,44 +19,46 @@
 
 package org.isoron.uhabits.widgets
 
-import android.content.*
-import android.view.*
-import org.isoron.uhabits.activities.common.views.*
-import org.isoron.uhabits.activities.habits.show.views.*
-import org.isoron.uhabits.core.models.*
-import org.isoron.uhabits.utils.*
-import org.isoron.uhabits.widgets.views.*
+import android.app.PendingIntent
+import android.content.Context
+import android.view.View
+import org.isoron.uhabits.activities.common.views.ScoreChart
+import org.isoron.uhabits.core.models.Habit
+import org.isoron.uhabits.core.ui.screens.habits.show.views.ScoreCardPresenter
+import org.isoron.uhabits.utils.toThemedAndroidColor
+import org.isoron.uhabits.widgets.views.GraphWidgetView
 
 class ScoreWidget(
-        context: Context,
-        id: Int,
-        private val habit: Habit
-) : BaseWidget(context, id) {
+    context: Context,
+    id: Int,
+    private val habit: Habit,
+    stacked: Boolean = false,
+) : BaseWidget(context, id, stacked) {
+    override val defaultHeight: Int = 300
+    override val defaultWidth: Int = 300
 
-    override fun getOnClickPendingIntent(context: Context) =
-            pendingIntentFactory.showHabit(habit)
+    override fun getOnClickPendingIntent(context: Context): PendingIntent =
+        pendingIntentFactory.showHabit(habit)
 
     override fun refreshData(view: View) {
-        val size = ScoreCard.BUCKET_SIZES[prefs.defaultScoreSpinnerPosition]
-        val scores = when(size) {
-            1 -> habit.scores.toList()
-            else -> habit.scores.groupBy(ScoreCard.getTruncateField(size))
-        }
-
+        val viewModel = ScoreCardPresenter.buildState(
+            habit = habit,
+            firstWeekday = prefs.firstWeekdayInt,
+            spinnerPosition = prefs.scoreCardSpinnerPosition
+        )
         val widgetView = view as GraphWidgetView
+        widgetView.setBackgroundAlpha(preferedBackgroundAlpha)
+        if (preferedBackgroundAlpha >= 255) widgetView.setShadowAlpha(0x4f)
         (widgetView.dataView as ScoreChart).apply {
             setIsTransparencyEnabled(true)
-            setBucketSize(size)
-            setColor(PaletteUtils.getColor(context, habit.color))
-            setScores(scores)
+            setBucketSize(viewModel.bucketSize)
+            setColor(habit.color.toThemedAndroidColor(context))
+            setScores(viewModel.scores)
         }
     }
 
     override fun buildView() =
-            GraphWidgetView(context, ScoreChart(context)).apply {
-                setTitle(habit.name)
-            }
-
-    override fun getDefaultHeight() = 300
-    override fun getDefaultWidth() = 300
+        GraphWidgetView(context, ScoreChart(context)).apply {
+            setTitle(habit.name)
+        }
 }

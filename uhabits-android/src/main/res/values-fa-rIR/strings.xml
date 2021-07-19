@@ -1,0 +1,175 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  ~ Copyright (C) 2016-2021 Álinson Santos Xavier <git@axavier.org>
+  ~
+  ~ This file is part of Loop Habit Tracker.
+  ~
+  ~ Loop Habit Tracker is free software: you can redistribute it and/or modify
+  ~ it under the terms of the GNU General Public License as published by the
+  ~ Free Software Foundation, either version 3 of the License, or (at your
+  ~ option) any later version.
+  ~
+  ~ Loop Habit Tracker is distributed in the hope that it will be useful, but
+  ~ WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY
+  ~ or FITNESS FOR A PARTICULAR PURPOSE. See the GNU General Public License for
+  ~ more details.
+  ~
+  ~ You should have received a copy of the GNU General Public License along
+  ~ with this program. If not, see <http://www.gnu.org/licenses/>.
+  -->
+<resources xmlns:tools="http://schemas.android.com/tools" tools:ignore="MissingTranslation">
+    <string name="app_name">Loop Habit Tracker</string>
+    <string name="main_activity_title">عادت‌ها</string>
+    <string name="action_settings">تنظیمات</string>
+    <string name="edit">ویرایش</string>
+    <string name="delete">حذف</string>
+    <string name="archive">بایگانی کن</string>
+    <string name="unarchive">خارج کردن از بایگانی</string>
+    <string name="add_habit">افزودن عادت</string>
+    <string name="color_picker_default_title">تغییر رنگ</string>
+    <string name="toast_habit_created">عادت ایجاد شد</string>
+    <string name="overview">مرور</string>
+    <string name="habit_strength">قدرت عادت</string>
+    <string name="history">تاریخچه </string>
+    <string name="clear">پاک کردن</string>
+    <string name="reminder">یادآور</string>
+    <string name="save">ذخیره</string>
+    <string name="streaks">روزهای پیوسته</string>
+    <string name="no_habits_found">شما هیچ عادت فعالی ندارید</string>
+    <string name="long_press_to_toggle">برای تیک زدن یا برداشتن، ضربه بزنید و نگه دارید</string>
+    <string name="reminder_off">خاموش</string>
+    <string name="create_habit">ساخت عادت جدید</string>
+    <string name="edit_habit">ویرایش عادت</string>
+    <string name="check">تیک زدن</string>
+    <string name="snooze">بعداً </string>
+    <string name="intro_title_1">خوش آمدید</string>
+    <string name="intro_description_1">رهگیر عادت لوپ به شما کمک می‌کند تا برای خودتان عادت‌های خوبی بسازید. </string>
+    <string name="intro_title_2">ساخت چند عادت جدید</string>
+    <string name="intro_description_2">هر روز، بعد از انجام عادت، آن را در برنامه تیک بزنید. </string>
+    <string name="intro_title_4">پیشرفت خود را رهگیری کنید</string>
+    <string name="intro_description_4">نمودار جزئیات به شما نشان می‌دهد که چطور عادت‌هایتان با گذشت زمان بهبود پیدا کرده‌اند.</string>
+    <string name="interval_15_minutes">۱۵ دقیقه</string>
+    <string name="interval_30_minutes">۳۰ دقیقه</string>
+    <string name="interval_1_hour">۱ ساعتذ</string>
+    <string name="interval_2_hour">۲ ساعت</string>
+    <string name="interval_4_hour">۴ ساعت</string>
+    <string name="interval_8_hour">۸ ساعت</string>
+    <string name="interval_24_hour">۲۴ ساعت </string>
+    <string name="interval_always_ask">همیشه پرسیده شود </string>
+    <string name="interval_custom">سفارشی سازی </string>
+    <string name="pref_toggle_title">با اشاره‌ی کوتاه‌مدت وضعیت عادت را تغییر بده</string>
+    <string name="pref_toggle_description">تیک زدن با تک‌ضربه در مقابل ضربه‌زدن و نگه‌داشتن راحت‌تر است ولی ممکن است باعث شود اشتباهی عادتی را تیک بزنید. </string>
+    <string name="pref_rate_this_app">به این برنامه در گوگل‌پلی امتیاز بدهید </string>
+    <string name="pref_send_feedback">ارسال بازخورد به توسعه‌دهنده</string>
+    <string name="pref_view_source_code">دیدن منبع برنامه در گیت‌هاب </string>
+    <string name="links">لینک‌ها</string>
+    <string name="name">نام</string>
+    <string name="settings">تنظیمات</string>
+    <string name="select_snooze_delay">تأخیر تعویق را انتخاب کنید </string>
+    <string name="hint_title">آیا می دانستید؟ </string>
+    <string name="hint_drag">برای جابجایی عناوین، انگشتتان را روی نام عادت مورد نظر بگذارید و نگه دارید، سپس آن را به محل صحیح بکشید. </string>
+    <string name="hint_landscape">با قرار دادن گوشی در حالت افقی می‌توانید روزهای بیشتری را ببینید. </string>
+    <string name="habit_not_found">عادت حذف شده/ پیدا نشد </string>
+    <string name="weekends">آخر هفته‌ها </string>
+    <string name="any_weekday">دوشنبه تا جمعه </string>
+    <string name="any_day">هر روز هفته </string>
+    <string name="select_weekdays">انتخاب روزها </string>
+    <string name="export_to_csv">صدور فایل CSV </string>
+    <string name="done_label">انجام شد </string>
+    <string name="clear_label">پاک کردن</string>
+    <string name="select_hours">انتخاب ساعت </string>
+    <string name="select_minutes">انتخاب دقیقه </string>
+    <string name="about">درباره</string>
+    <string name="translators">مترجمان </string>
+    <string name="developers">توسعه‌دهندگان</string>
+    <string name="version_n">نسخه %s </string>
+    <string name="frequency">تناوب‌</string>
+    <string name="checkmark">علامت </string>
+    <string name="best_streaks">بهترین استمرار </string>
+    <string name="every_day">هر روز </string>
+    <string name="every_week">هر هفته </string>
+    <string name="help">راهنما و سوالات متداول </string>
+    <string name="could_not_export">خطا در صدور اطلاعات.</string>
+    <string name="could_not_import">خطا در وارد کردن اطلاعات.</string>
+    <string name="file_not_recognized">پرونده شناخته شده نیست.</string>
+    <string name="habits_imported">عادت‌ها با موفقیت وارد شدند.</string>
+    <string name="import_data">ورود اطلاعات</string>
+    <string name="export_full_backup">پشتیبان گیری کامل</string>
+    <string name="import_data_summary">علاوه بر پشتیبان کامل تهیه شده توسط این برنامه، از پرونده‌های تولید شده توسط Tickmate، HabitbBull و یا Rewire هم پشتیبانی می‌شود. برای اطلاعات بیشتر سوالات متداول را ببینید.</string>
+    <string name="export_as_csv_summary">پرونده‌ای تولید می‌کند که می‌توان توسط برنامه‌های صفحه گسترده مانند Microsoft Excel و یا OpenOffice Calc بازشان کرد. این پرونده قابلیت وارد کردن مجدد به این برنامه را ندارد.</string>
+    <string name="export_full_backup_summary">پرونده‌ای تولید می‌کند که شامل تمام اطلاعات شما است. این پرونده قابل بازیابی توسط این برنامه می‌باشد.</string>
+    <string name="bug_report_failed">خطایی در تولید گزارش مشکلات بوجود آمد.</string>
+    <string name="generate_bug_report">ایجاد گزارش مشکلات</string>
+    <string name="troubleshooting">ایرادیابی</string>
+    <string name="help_translate">کمک برای ترجمه این برنامه</string>
+    <string name="night_mode" comment="dark_theme">حالت شب</string>
+    <string name="use_pure_black">استفاده از رنگ سیاه خالص در حالت شبانه</string>
+    <string name="pure_black_description">جایگزینی پس زمینه خاکستری با سیاه خالص در حالت شب. استفاده از باتری در گوشی‌های با صفحه نمایش AMOLED را کاهش می‌دهد.</string>
+    <string name="interface_preferences">رابط کاربری</string>
+    <string name="reverse_days">معکوس کردن ترتیب روزها</string>
+    <string name="reverse_days_description">روزها را در صفحه اصلی با ترتیب معکوس نمایش می‌دهد</string>
+    <string name="day">روز</string>
+    <string name="week">هفته</string>
+    <string name="month">ماه</string>
+    <string name="quarter">فصل</string>
+    <string name="year">سال</string>
+    <string name="total">مجموع</string>
+    <string name="yes_or_no">بله یا خیر</string>
+    <string name="every_x_days">هر %d روز یک‌بار</string>
+    <string name="every_x_weeks">هر %d هفته یک‌بار</string>
+    <string name="score">امتیاز</string>
+    <string name="reminder_sound">صدای یادآور</string>
+    <string name="none">هیچ‌کدام</string>
+    <string name="filter">فیلتر</string>
+    <string name="hide_completed">مخفی کردن کامل شده‌ها</string>
+    <string name="hide_archived">مخفی کردن بایگانی شده‌ها</string>
+    <string name="sticky_notifications">چسبناک کردن اعلان‌ها</string>
+    <string name="sticky_notifications_description">از رد کردن اعلان با کشیدن جلوگیری می‌کند.</string>
+    <string name="led_notifications">چراغ اعلان</string>
+    <string name="led_notifications_description">یک چراغ چشمک زن برای یادآوری ها نشان می دهد. فقط در تلفن های دارای چراغ های اعلان ال ای دی موجود است.</string>
+    <string name="repair_database">تعمیر پایگاه داده</string>
+    <string name="database_repaired">پایگاه داده تعمیر شد.</string>
+    <string name="uncheck">برداشتن تیک</string>
+    <string name="toggle">تغییر وضعیت</string>
+    <string name="action">اقدام</string>
+    <string name="habit">عادت</string>
+    <string name="sort">مرتب‌سازی</string>
+    <string name="manually">دستی</string>
+    <string name="by_name">بر اساس نام</string>
+    <string name="by_color">بر اساس رنگ</string>
+    <string name="by_score">بر اساس امتیاز</string>
+    <string name="export">صدور</string>
+    <string name="long_press_to_edit">فشار و نگه دارید تا مقدار را تغییر دهید</string>
+    <string name="change_value">تغییر مقدار</string>
+    <string name="calendar">تقویم</string>
+    <string name="unit">Unit</string>
+    <string name="example_question_boolean">مثلا امروز ورزش کردید؟</string>
+    <string name="question">پرسش</string>
+    <string name="target">هدف</string>
+    <string name="yes">بله</string>
+    <string name="no">نه</string>
+    <string name="customize_notification_summary">تنظیمات صدا ، لرزش ، نور و سایر تنظیمات را تغییر دهید</string>
+    <string name="customize_notification">اعلان ها را سفارشی کنید</string>
+    <string name="pref_view_privacy">مشاهده سیاست حفظ حریم خصوصی</string>
+    <string name="view_all_contributors">مشاهده همه همکاران&#8230;</string>
+    <string name="database">پایگاه داده</string>
+    <string name="widget_opacity_title">تیرگی ویجت</string>
+    <string name="widget_opacity_description">ویجت ها را در صفحه اصلی شفاف تر یا مات می کند.</string>
+    <string name="first_day_of_the_week">روز اول هفته</string>
+    <string name="default_reminder_question">آیا امروز این عادت را کامل کرده اید؟</string>
+    <string name="notes">یادداشت</string>
+    <string name="example_notes">(اختیاری)</string>
+    <string name="yes_or_no_example">آیا امروز زود بیدار شدید؟ ورزش کردی؟ شطرنج بازی کردی؟</string>
+    <string name="measurable">قابل اندازه گیری</string>
+    <string name="x_times_per_week">%d بار در هفته</string>
+    <string name="x_times_per_month">%d بار در ماه</string>
+    <string name="yes_or_no_short_example">مثلاً ورزش کنید</string>
+    <string name="color">رنگ</string>
+    <string name="example_target">مثلاً 15</string>
+    <string name="measurable_short_example">مثلاً اجرا کنید</string>
+    <string name="measurable_question_example">امروز چند مایل را طی کردید؟</string>
+    <string name="measurable_units_example">مایل ها</string>
+    <string name="every_month">هر ماه</string>
+    <string name="validation_cannot_be_blank">نمیتواند خالی باشد</string>
+    <string name="today">امروز</string>
+</resources>

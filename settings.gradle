@@ -1,1 +1,0 @@
-include ':uhabits-android', ':uhabits-core', ':android-base', ':android-pickers'

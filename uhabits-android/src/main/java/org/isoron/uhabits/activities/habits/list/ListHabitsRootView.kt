@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2016 Álinson Santos Xavier <isoron@gmail.com>
+ * Copyright (C) 2016-2021 Álinson Santos Xavier <git@axavier.org>
  *
  * This file is part of Loop Habit Tracker.
  *
@@ -19,37 +19,51 @@
 
 package org.isoron.uhabits.activities.habits.list
 
-import android.content.*
-import android.os.Build.VERSION.*
-import android.os.Build.VERSION_CODES.*
-import android.support.v7.widget.Toolbar
-import android.view.ViewGroup.LayoutParams.*
-import android.widget.*
-import org.isoron.androidbase.activities.*
-import org.isoron.uhabits.*
-import org.isoron.uhabits.activities.common.views.*
-import org.isoron.uhabits.activities.habits.list.views.*
-import org.isoron.uhabits.core.models.*
-import org.isoron.uhabits.core.preferences.*
-import org.isoron.uhabits.core.tasks.*
-import org.isoron.uhabits.core.ui.screens.habits.list.*
-import org.isoron.uhabits.core.utils.*
-import org.isoron.uhabits.utils.*
-import java.lang.Math.*
-import javax.inject.*
+import android.content.Context
+import android.view.ViewGroup.LayoutParams.MATCH_PARENT
+import android.widget.FrameLayout
+import android.widget.RelativeLayout
+import org.isoron.uhabits.R
+import org.isoron.uhabits.activities.common.views.ScrollableChart
+import org.isoron.uhabits.activities.common.views.TaskProgressBar
+import org.isoron.uhabits.activities.habits.list.views.EmptyListView
+import org.isoron.uhabits.activities.habits.list.views.HabitCardListAdapter
+import org.isoron.uhabits.activities.habits.list.views.HabitCardListView
+import org.isoron.uhabits.activities.habits.list.views.HabitCardListViewFactory
+import org.isoron.uhabits.activities.habits.list.views.HeaderView
+import org.isoron.uhabits.activities.habits.list.views.HintView
+import org.isoron.uhabits.core.models.ModelObservable
+import org.isoron.uhabits.core.models.PaletteColor
+import org.isoron.uhabits.core.preferences.Preferences
+import org.isoron.uhabits.core.tasks.TaskRunner
+import org.isoron.uhabits.core.ui.screens.habits.list.HintListFactory
+import org.isoron.uhabits.core.utils.MidnightTimer
+import org.isoron.uhabits.inject.ActivityContext
+import org.isoron.uhabits.inject.ActivityScope
+import org.isoron.uhabits.utils.addAtBottom
+import org.isoron.uhabits.utils.addAtTop
+import org.isoron.uhabits.utils.addBelow
+import org.isoron.uhabits.utils.buildToolbar
+import org.isoron.uhabits.utils.dim
+import org.isoron.uhabits.utils.dp
+import org.isoron.uhabits.utils.setupToolbar
+import org.isoron.uhabits.utils.sres
+import javax.inject.Inject
+import kotlin.math.max
+import kotlin.math.min
 
 const val MAX_CHECKMARK_COUNT = 60
 
 @ActivityScope
 class ListHabitsRootView @Inject constructor(
-        @ActivityContext context: Context,
-        hintListFactory: HintListFactory,
-        preferences: Preferences,
-        midnightTimer: MidnightTimer,
-        runner: TaskRunner,
-        private val listAdapter: HabitCardListAdapter,
-        habitCardListViewFactory: HabitCardListViewFactory
-) : BaseRootView(context), ModelObservable.Listener {
+    @ActivityContext context: Context,
+    hintListFactory: HintListFactory,
+    preferences: Preferences,
+    midnightTimer: MidnightTimer,
+    runner: TaskRunner,
+    private val listAdapter: HabitCardListAdapter,
+    habitCardListViewFactory: HabitCardListViewFactory
+) : FrameLayout(context), ModelObservable.Listener {
 
     val listView: HabitCardListView = habitCardListViewFactory.create()
     val llEmpty = EmptyListView(context)
@@ -63,7 +77,7 @@ class ListHabitsRootView @Inject constructor(
         val hintList = hintListFactory.create(hints)
         hintView = HintView(context, hintList)
 
-        addView(RelativeLayout(context).apply {
+        val rootView = RelativeLayout(context).apply {
             background = sres.getDrawable(R.attr.windowBackgroundColor)
             addAtTop(tbar)
             addBelow(header, tbar)
@@ -73,18 +87,15 @@ class ListHabitsRootView @Inject constructor(
                 it.topMargin = dp(-6.0f).toInt()
             }
             addAtBottom(hintView)
-            if (SDK_INT < LOLLIPOP) {
-                addBelow(ShadowView(context), tbar)
-                addBelow(ShadowView(context), header)
-            }
-        }, MATCH_PARENT, MATCH_PARENT)
-
+        }
+        rootView.setupToolbar(
+            toolbar = tbar,
+            title = resources.getString(R.string.main_activity_title),
+            color = PaletteColor(17),
+            displayHomeAsUpEnabled = false,
+        )
+        addView(rootView, MATCH_PARENT, MATCH_PARENT)
         listAdapter.setListView(listView)
-        initToolbar()
-    }
-
-    override fun getToolbar(): Toolbar {
-        return tbar
     }
 
     override fun onModelChange() {
@@ -92,11 +103,13 @@ class ListHabitsRootView @Inject constructor(
     }
 
     private fun setupControllers() {
-        header.setScrollController(object : ScrollableChart.ScrollController {
-            override fun onDataOffsetChanged(newDataOffset: Int) {
-                listView.dataOffset = newDataOffset
+        header.setScrollController(
+            object : ScrollableChart.ScrollController {
+                override fun onDataOffsetChanged(newDataOffset: Int) {
+                    listView.dataOffset = newDataOffset
+                }
             }
-        })
+        )
     }
 
     override fun onAttachedToWindow() {
@@ -127,9 +140,14 @@ class ListHabitsRootView @Inject constructor(
     }
 
     private fun updateEmptyView() {
-        llEmpty.visibility = when (listAdapter.itemCount) {
-            0 -> VISIBLE
-            else -> GONE
+        if (listAdapter.itemCount == 0) {
+            if (listAdapter.hasNoHabit()) {
+                llEmpty.showEmpty()
+            } else {
+                llEmpty.showDone()
+            }
+        } else {
+            llEmpty.hide()
         }
     }
 }

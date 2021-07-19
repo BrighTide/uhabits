@@ -1,0 +1,146 @@
+/*
+ * Copyright (C) 2016-2021 Álinson Santos Xavier <git@axavier.org>
+ *
+ * This file is part of Loop Habit Tracker.
+ *
+ * Loop Habit Tracker is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by the
+ * Free Software Foundation, either version 3 of the License, or (at your
+ * option) any later version.
+ *
+ * Loop Habit Tracker is distributed in the hope that it will be useful, but
+ * WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY
+ * or FITNESS FOR A PARTICULAR PURPOSE. See the GNU General Public License for
+ * more details.
+ *
+ * You should have received a copy of the GNU General Public License along
+ * with this program. If not, see <http://www.gnu.org/licenses/>.
+ */
+
+package org.isoron.uhabits.core.ui.screens.habits.show.views
+
+import org.isoron.platform.time.DayOfWeek
+import org.isoron.platform.time.LocalDate
+import org.isoron.uhabits.core.commands.CommandRunner
+import org.isoron.uhabits.core.commands.CreateRepetitionCommand
+import org.isoron.uhabits.core.models.Entry
+import org.isoron.uhabits.core.models.Entry.Companion.SKIP
+import org.isoron.uhabits.core.models.Entry.Companion.YES_AUTO
+import org.isoron.uhabits.core.models.Entry.Companion.YES_MANUAL
+import org.isoron.uhabits.core.models.Habit
+import org.isoron.uhabits.core.models.HabitList
+import org.isoron.uhabits.core.models.PaletteColor
+import org.isoron.uhabits.core.models.Timestamp
+import org.isoron.uhabits.core.preferences.Preferences
+import org.isoron.uhabits.core.ui.screens.habits.list.ListHabitsBehavior
+import org.isoron.uhabits.core.ui.views.HistoryChart
+import org.isoron.uhabits.core.ui.views.OnDateClickedListener
+import org.isoron.uhabits.core.ui.views.Theme
+import org.isoron.uhabits.core.utils.DateUtils
+import kotlin.math.max
+import kotlin.math.roundToInt
+
+data class HistoryCardState(
+    val color: PaletteColor,
+    val firstWeekday: DayOfWeek,
+    val series: List<HistoryChart.Square>,
+    val theme: Theme,
+    val today: LocalDate,
+)
+
+class HistoryCardPresenter(
+    val commandRunner: CommandRunner,
+    val habit: Habit,
+    val habitList: HabitList,
+    val preferences: Preferences,
+    val screen: Screen,
+) : OnDateClickedListener {
+
+    override fun onDateClicked(date: LocalDate) {
+        val timestamp = Timestamp.fromLocalDate(date)
+        screen.showFeedback()
+        if (habit.isNumerical) {
+            val entries = habit.computedEntries
+            val oldValue = entries.get(timestamp).value
+            screen.showNumberPicker(oldValue / 1000.0, habit.unit) { newValue: Double ->
+                val thousands = (newValue * 1000).roundToInt()
+                commandRunner.run(
+                    CreateRepetitionCommand(
+                        habitList,
+                        habit,
+                        timestamp,
+                        thousands,
+                    ),
+                )
+            }
+        } else {
+            val currentValue = habit.computedEntries.get(timestamp).value
+            val nextValue = if (preferences.isSkipEnabled) {
+                Entry.nextToggleValueWithSkip(currentValue)
+            } else {
+                Entry.nextToggleValueWithoutSkip(currentValue)
+            }
+            commandRunner.run(
+                CreateRepetitionCommand(
+                    habitList,
+                    habit,
+                    timestamp,
+                    nextValue,
+                ),
+            )
+        }
+    }
+
+    fun onClickEditButton() {
+        screen.showHistoryEditorDialog(this)
+    }
+
+    companion object {
+        fun buildState(
+            habit: Habit,
+            firstWeekday: DayOfWeek,
+            theme: Theme,
+        ): HistoryCardState {
+            val today = DateUtils.getTodayWithOffset()
+            val oldest = habit.computedEntries.getKnown().lastOrNull()?.timestamp ?: today
+            val entries = habit.computedEntries.getByInterval(oldest, today)
+            val series = if (habit.isNumerical) {
+                entries.map {
+                    Entry(it.timestamp, max(0, it.value))
+                }.map {
+                    when (it.value) {
+                        0 -> HistoryChart.Square.OFF
+                        else -> HistoryChart.Square.ON
+                    }
+                }
+            } else {
+                entries.map {
+                    when (it.value) {
+                        YES_MANUAL -> HistoryChart.Square.ON
+                        YES_AUTO -> HistoryChart.Square.DIMMED
+                        SKIP -> HistoryChart.Square.HATCHED
+                        else -> HistoryChart.Square.OFF
+                    }
+                }
+            }
+
+            return HistoryCardState(
+                color = habit.color,
+                firstWeekday = firstWeekday,
+                today = today.toLocalDate(),
+                theme = theme,
+                series = series,
+            )
+        }
+    }
+
+    interface Screen {
+        fun showHistoryEditorDialog(listener: OnDateClickedListener)
+        fun showFeedback()
+        fun showNumberPicker(
+            value: Double,
+            unit: String,
+            callback: ListHabitsBehavior.NumberPickerCallback,
+        )
+    }
+}

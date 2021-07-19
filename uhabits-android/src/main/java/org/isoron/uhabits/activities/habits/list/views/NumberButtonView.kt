@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2016 Álinson Santos Xavier <isoron@gmail.com>
+ * Copyright (C) 2016-2021 Álinson Santos Xavier <git@axavier.org>
  *
  * This file is part of Loop Habit Tracker.
  *
@@ -19,19 +19,25 @@
 
 package org.isoron.uhabits.activities.habits.list.views
 
-import android.content.*
-import android.graphics.*
-import android.text.*
-import android.view.*
-import android.view.View.*
-import com.google.auto.factory.*
-import org.isoron.androidbase.activities.*
-import org.isoron.androidbase.utils.*
-import org.isoron.androidbase.utils.InterfaceUtils.*
-import org.isoron.uhabits.*
-import org.isoron.uhabits.core.preferences.*
-import org.isoron.uhabits.utils.*
-import java.text.*
+import android.content.Context
+import android.graphics.Canvas
+import android.graphics.Paint
+import android.graphics.RectF
+import android.graphics.Typeface
+import android.text.TextPaint
+import android.view.View
+import android.view.View.OnClickListener
+import android.view.View.OnLongClickListener
+import org.isoron.uhabits.R
+import org.isoron.uhabits.core.preferences.Preferences
+import org.isoron.uhabits.inject.ActivityContext
+import org.isoron.uhabits.utils.InterfaceUtils.getDimension
+import org.isoron.uhabits.utils.StyledResources
+import org.isoron.uhabits.utils.dim
+import org.isoron.uhabits.utils.getFontAwesome
+import org.isoron.uhabits.utils.showMessage
+import java.text.DecimalFormat
+import javax.inject.Inject
 
 private val BOLD_TYPEFACE = Typeface.create("sans-serif-condensed", Typeface.BOLD)
 private val NORMAL_TYPEFACE = Typeface.create("sans-serif-condensed", Typeface.NORMAL)
@@ -49,10 +55,17 @@ fun Double.toShortString(): String = when {
     else -> DecimalFormat("#.##").format(this)
 }
 
-@AutoFactory
+class NumberButtonViewFactory
+@Inject constructor(
+    @ActivityContext val context: Context,
+    val preferences: Preferences
+) {
+    fun create() = NumberButtonView(context, preferences)
+}
+
 class NumberButtonView(
-        @Provided @ActivityContext context: Context,
-        @Provided val preferences: Preferences
+    @ActivityContext context: Context,
+    val preferences: Preferences
 ) : View(context),
     OnClickListener,
     OnLongClickListener {
@@ -91,7 +104,7 @@ class NumberButtonView(
 
     override fun onClick(v: View) {
         if (preferences.isShortToggleEnabled) onEdit()
-        else showMessage(R.string.long_press_to_edit)
+        else showMessage(resources.getString(R.string.long_press_to_edit))
     }
 
     override fun onLongClick(v: View): Boolean {
@@ -116,45 +129,73 @@ class NumberButtonView(
         private val rect: RectF = RectF()
         private val sr = StyledResources(context)
 
-        private val lightGrey: Int
-        private val darkGrey: Int
+        private val lowContrast: Int
+        private val mediumContrast: Int
 
-        private val pRegular: TextPaint = TextPaint().apply {
+        private val pUnit: TextPaint = TextPaint().apply {
             textSize = getDimension(context, R.dimen.smallerTextSize)
             typeface = NORMAL_TYPEFACE
             isAntiAlias = true
             textAlign = Paint.Align.CENTER
         }
 
-        private val pBold: TextPaint = TextPaint().apply {
-            textSize = getDimension(context, R.dimen.smallTextSize)
+        private val pNumber: TextPaint = TextPaint().apply {
+            textSize = dim(R.dimen.smallTextSize)
             typeface = BOLD_TYPEFACE
             isAntiAlias = true
             textAlign = Paint.Align.CENTER
         }
 
         init {
-            em = pBold.measureText("m")
-            lightGrey = sr.getColor(R.attr.lowContrastTextColor)
-            darkGrey = sr.getColor(R.attr.mediumContrastTextColor)
+            em = pNumber.measureText("m")
+            lowContrast = sr.getColor(R.attr.contrast40)
+            mediumContrast = sr.getColor(R.attr.contrast60)
         }
 
         fun draw(canvas: Canvas) {
             val activeColor = when {
-                value == 0.0 -> lightGrey
-                value < threshold -> darkGrey
+                value <= 0.0 -> lowContrast
+                value < threshold -> mediumContrast
                 else -> color
             }
 
-            val label = value.toShortString()
-            pBold.color = activeColor
-            pRegular.color = activeColor
+            val label: String
+            val typeface: Typeface
+            val textSize: Float
 
-            rect.set(0f, 0f, width.toFloat(), height.toFloat())
-            canvas.drawText(label, rect.centerX(), rect.centerY(), pBold)
+            when {
+                value >= 0 -> {
+                    label = value.toShortString()
+                    typeface = BOLD_TYPEFACE
+                    textSize = dim(R.dimen.smallTextSize)
+                }
+                preferences.areQuestionMarksEnabled() -> {
+                    label = resources.getString(R.string.fa_question)
+                    typeface = getFontAwesome()
+                    textSize = dim(R.dimen.smallerTextSize)
+                }
+                else -> {
+                    label = "0"
+                    typeface = BOLD_TYPEFACE
+                    textSize = dim(R.dimen.smallTextSize)
+                }
+            }
 
-            rect.offset(0f, 1.2f * em)
-            canvas.drawText(units, rect.centerX(), rect.centerY(), pRegular)
+            pNumber.textSize = textSize
+            pNumber.color = activeColor
+            pNumber.typeface = typeface
+            pUnit.color = activeColor
+
+            if (units.isBlank()) {
+                rect.set(0f, 0f, width.toFloat(), height.toFloat())
+                rect.offset(0f, 0.5f * em)
+                canvas.drawText(label, rect.centerX(), rect.centerY(), pNumber)
+            } else {
+                rect.set(0f, 0f, width.toFloat(), height.toFloat())
+                canvas.drawText(label, rect.centerX(), rect.centerY(), pNumber)
+                rect.offset(0f, 1.3f * em)
+                canvas.drawText(units, rect.centerX(), rect.centerY(), pUnit)
+            }
         }
     }
 }

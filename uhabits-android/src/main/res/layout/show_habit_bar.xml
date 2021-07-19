@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?><!--
-  ~ Copyright (C) 2016 Álinson Santos Xavier <isoron@gmail.com>
+  ~ Copyright (C) 2016-2021 Álinson Santos Xavier <git@axavier.org>
   ~
   ~ This file is part of Loop Habit Tracker.
   ~
@@ -23,7 +23,7 @@
         android:layout_width="match_parent"
         android:layout_height="match_parent">
 
-        <android.support.v7.widget.AppCompatSpinner
+        <androidx.appcompat.widget.AppCompatSpinner
             android:id="@+id/numericalSpinner"
             android:layout_width="wrap_content"
             android:layout_height="22dp"
@@ -33,7 +33,7 @@
             android:entries="@array/strengthIntervalNames"
             android:theme="@style/SmallSpinner" />
 
-        <android.support.v7.widget.AppCompatSpinner
+        <androidx.appcompat.widget.AppCompatSpinner
             android:id="@+id/boolSpinner"
             android:layout_width="wrap_content"
             android:layout_height="22dp"
@@ -52,8 +52,8 @@
             android:layout_alignParentTop="true"
             android:text="@string/history" />
 
-        <org.isoron.uhabits.activities.common.views.BarChart
-            android:id="@+id/barChart"
+        <org.isoron.platform.gui.AndroidDataView
+            android:id="@+id/chart"
             android:layout_width="match_parent"
             android:layout_height="220dp"
             android:layout_below="@id/title"/>

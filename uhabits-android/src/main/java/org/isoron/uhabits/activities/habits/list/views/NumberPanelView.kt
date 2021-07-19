@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2016 Álinson Santos Xavier <isoron@gmail.com>
+ * Copyright (C) 2016-2021 Álinson Santos Xavier <git@axavier.org>
  *
  * This file is part of Loop Habit Tracker.
  *
@@ -19,18 +19,26 @@
 
 package org.isoron.uhabits.activities.habits.list.views
 
-import android.content.*
-import com.google.auto.factory.*
-import org.isoron.androidbase.activities.*
-import org.isoron.uhabits.core.models.*
-import org.isoron.uhabits.core.preferences.*
-import org.isoron.uhabits.core.utils.*
+import android.content.Context
+import org.isoron.uhabits.core.models.Timestamp
+import org.isoron.uhabits.core.preferences.Preferences
+import org.isoron.uhabits.core.utils.DateUtils
+import org.isoron.uhabits.inject.ActivityContext
+import javax.inject.Inject
 
-@AutoFactory
+class NumberPanelViewFactory
+@Inject constructor(
+    @ActivityContext val context: Context,
+    val preferences: Preferences,
+    val buttonFactory: NumberButtonViewFactory
+) {
+    fun create() = NumberPanelView(context, preferences, buttonFactory)
+}
+
 class NumberPanelView(
-        @Provided @ActivityContext context: Context,
-        @Provided preferences: Preferences,
-        @Provided private val buttonFactory: NumberButtonViewFactory
+    @ActivityContext context: Context,
+    preferences: Preferences,
+    private val buttonFactory: NumberButtonViewFactory
 ) : ButtonPanelView<NumberButtonView>(context, preferences) {
 
     var values = DoubleArray(0)
@@ -63,11 +71,11 @@ class NumberPanelView(
             setupButtons()
         }
 
-    override fun createButton() = buttonFactory.create()!!
+    override fun createButton() = buttonFactory.create()
 
     @Synchronized
     override fun setupButtons() {
-        val today = DateUtils.getToday()
+        val today = DateUtils.getTodayWithOffset()
 
         buttons.forEachIndexed { index, button ->
             val timestamp = today.minus(index + dataOffset)

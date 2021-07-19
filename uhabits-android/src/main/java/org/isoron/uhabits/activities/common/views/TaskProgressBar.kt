@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2017 Álinson Santos Xavier <isoron@gmail.com>
+ * Copyright (C) 2016-2021 Álinson Santos Xavier <git@axavier.org>
  *
  * This file is part of Loop Habit Tracker.
  *
@@ -19,27 +19,29 @@
 
 package org.isoron.uhabits.activities.common.views
 
-import android.content.*
-import android.widget.*
-import org.isoron.androidbase.activities.*
-import org.isoron.uhabits.core.tasks.*
+import android.content.Context
+import android.view.View
+import android.widget.ProgressBar
+import org.isoron.uhabits.core.tasks.Task
+import org.isoron.uhabits.core.tasks.TaskRunner
 
 class TaskProgressBar(
-        context: Context,
-        private val runner: TaskRunner
+    context: Context,
+    private val runner: TaskRunner
 ) : ProgressBar(
-        context,
-        null,
-        android.R.attr.progressBarStyleHorizontal
-), TaskRunner.Listener {
+    context,
+    null,
+    android.R.attr.progressBarStyleHorizontal
+),
+    TaskRunner.Listener {
 
     init {
-        visibility = BaseRootView.GONE
+        visibility = View.GONE
         isIndeterminate = true
     }
 
-    override fun onTaskStarted(task: Task?) = update()
-    override fun onTaskFinished(task: Task?) = update()
+    override fun onTaskStarted(task: Task) = update()
+    override fun onTaskFinished(task: Task) = update()
 
     override fun onAttachedToWindow() {
         super.onAttachedToWindow()
@@ -54,8 +56,7 @@ class TaskProgressBar(
 
     fun update() {
         val callback = {
-            val activeTaskCount = runner.activeTaskCount
-            val newVisibility = when (activeTaskCount) {
+            val newVisibility = when (runner.activeTaskCount) {
                 0 -> GONE
                 else -> VISIBLE
             }

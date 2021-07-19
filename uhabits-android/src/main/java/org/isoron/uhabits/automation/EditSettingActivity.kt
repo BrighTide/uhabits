@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2015-2017 Álinson Santos Xavier <isoron@gmail.com>
+ * Copyright (C) 2016-2021 Álinson Santos Xavier <git@axavier.org>
  *
  * This file is part of Loop Habit Tracker.
  *
@@ -19,26 +19,32 @@
 
 package org.isoron.uhabits.automation
 
-import android.os.*
+import android.os.Bundle
+import androidx.appcompat.app.AppCompatActivity
+import org.isoron.uhabits.HabitsApplication
+import org.isoron.uhabits.activities.AndroidThemeSwitcher
+import org.isoron.uhabits.core.models.HabitMatcherBuilder
 
-import org.isoron.androidbase.activities.*
-import org.isoron.uhabits.*
-import org.isoron.uhabits.core.models.*
-
-class EditSettingActivity : BaseActivity() {
+class EditSettingActivity : AppCompatActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         val app = applicationContext as HabitsApplication
         val habits = app.component.habitList.getFiltered(
-                HabitMatcherBuilder()
-                        .setArchivedAllowed(false)
-                        .setCompletedAllowed(true)
-                        .build())
+            HabitMatcherBuilder()
+                .setArchivedAllowed(false)
+                .setCompletedAllowed(true)
+                .build()
+        )
+        AndroidThemeSwitcher(this, app.component.preferences).apply()
 
+        val args = SettingUtils.parseIntent(this.intent, habits)
         val controller = EditSettingController(this)
-        val rootView = EditSettingRootView(this, habits, controller)
-        val screen = BaseScreen(this)
-        screen.setRootView(rootView)
-        setScreen(screen)
+        val view = EditSettingRootView(
+            context = this,
+            habitList = app.component.habitList,
+            onSave = controller::onSave,
+            args = args,
+        )
+        setContentView(view)
     }
 }

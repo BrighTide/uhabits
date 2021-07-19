@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2016 Álinson Santos Xavier <isoron@gmail.com>
+ * Copyright (C) 2016-2021 Álinson Santos Xavier <git@axavier.org>
  *
  * This file is part of Loop Habit Tracker.
  *
@@ -19,28 +19,56 @@
 
 package org.isoron.uhabits.activities
 
-import org.isoron.androidbase.activities.*
-import org.isoron.uhabits.*
-import org.isoron.uhabits.core.preferences.*
-import org.isoron.uhabits.core.ui.*
-import javax.inject.*
+import android.app.Activity
+import android.content.Context
+import android.content.res.Configuration.UI_MODE_NIGHT_MASK
+import android.content.res.Configuration.UI_MODE_NIGHT_YES
+import android.os.Build.VERSION.SDK_INT
+import androidx.core.content.ContextCompat
+import org.isoron.uhabits.R
+import org.isoron.uhabits.core.preferences.Preferences
+import org.isoron.uhabits.core.ui.ThemeSwitcher
+import org.isoron.uhabits.core.ui.views.DarkTheme
+import org.isoron.uhabits.core.ui.views.LightTheme
+import org.isoron.uhabits.core.ui.views.Theme
+import org.isoron.uhabits.inject.ActivityContext
+import org.isoron.uhabits.inject.ActivityScope
 
 @ActivityScope
 class AndroidThemeSwitcher
-@Inject constructor(
-        private val activity: BaseActivity,
-        preferences: Preferences
+constructor(
+    @ActivityContext val context: Context,
+    preferences: Preferences,
 ) : ThemeSwitcher(preferences) {
 
+    override var currentTheme: Theme = LightTheme()
+
+    override fun getSystemTheme(): Int {
+        if (SDK_INT < 29) return THEME_LIGHT
+        val uiMode = context.resources.configuration.uiMode
+        return if ((uiMode and UI_MODE_NIGHT_MASK) == UI_MODE_NIGHT_YES) {
+            THEME_DARK
+        } else {
+            THEME_LIGHT
+        }
+    }
+
     override fun applyDarkTheme() {
-        activity.setTheme(R.style.AppBaseThemeDark)
+        currentTheme = DarkTheme()
+        context.setTheme(R.style.AppBaseThemeDark)
+        (context as Activity).window.navigationBarColor =
+            ContextCompat.getColor(context, R.color.grey_900)
     }
 
     override fun applyLightTheme() {
-        activity.setTheme(R.style.AppBaseTheme)
+        currentTheme = LightTheme()
+        context.setTheme(R.style.AppBaseTheme)
     }
 
     override fun applyPureBlackTheme() {
-        activity.setTheme(R.style.AppBaseThemeDark_PureBlack)
+        currentTheme = DarkTheme()
+        context.setTheme(R.style.AppBaseThemeDark_PureBlack)
+        (context as Activity).window.navigationBarColor =
+            ContextCompat.getColor(context, R.color.black)
     }
 }

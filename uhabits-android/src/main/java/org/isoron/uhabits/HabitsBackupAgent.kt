@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2016 Álinson Santos Xavier <isoron@gmail.com>
+ * Copyright (C) 2016-2021 Álinson Santos Xavier <git@axavier.org>
  *
  * This file is part of Loop Habit Tracker.
  *
@@ -19,7 +19,9 @@
 
 package org.isoron.uhabits
 
-import android.app.backup.*
+import android.app.backup.BackupAgentHelper
+import android.app.backup.FileBackupHelper
+import android.app.backup.SharedPreferencesBackupHelper
 
 /**
  * An Android BackupAgentHelper customized for this application.

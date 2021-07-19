@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2017 Álinson Santos Xavier <isoron@gmail.com>
+ * Copyright (C) 2016-2021 Álinson Santos Xavier <git@axavier.org>
  *
  * This file is part of Loop Habit Tracker.
  *
@@ -15,40 +15,51 @@
  *
  * You should have received a copy of the GNU General Public License along
  * with this program. If not, see <http://www.gnu.org/licenses/>.
- *
- *
  */
 
 package org.isoron.uhabits
 
-import android.content.*
-import android.database.sqlite.*
-
-import org.isoron.uhabits.core.database.*
-import org.isoron.uhabits.database.*
+import android.content.Context
+import android.database.sqlite.SQLiteDatabase
+import android.database.sqlite.SQLiteOpenHelper
+import org.isoron.uhabits.core.database.MigrationHelper
+import org.isoron.uhabits.core.database.UnsupportedDatabaseVersionException
+import org.isoron.uhabits.database.AndroidDatabase
+import java.io.File
 
 class HabitsDatabaseOpener(
-        context: Context,
-        databaseFilename: String,
-        private val version: Int
+    context: Context,
+    private val databaseFilename: String,
+    private val version: Int
 ) : SQLiteOpenHelper(context, databaseFilename, null, version) {
 
     override fun onCreate(db: SQLiteDatabase) {
+        db.disableWriteAheadLogging()
         db.version = 8
         onUpgrade(db, -1, version)
     }
 
-    override fun onUpgrade(db: SQLiteDatabase,
-                           oldVersion: Int,
-                           newVersion: Int) {
+    override fun onOpen(db: SQLiteDatabase) {
+        super.onOpen(db)
+        db.disableWriteAheadLogging()
+    }
+
+    override fun onUpgrade(
+        db: SQLiteDatabase,
+        oldVersion: Int,
+        newVersion: Int
+    ) {
+        db.disableWriteAheadLogging()
         if (db.version < 8) throw UnsupportedDatabaseVersionException()
-        val helper = MigrationHelper(AndroidDatabase(db))
+        val helper = MigrationHelper(AndroidDatabase(db, File(databaseFilename)))
         helper.migrateTo(newVersion)
     }
 
-    override fun onDowngrade(db: SQLiteDatabase,
-                             oldVersion: Int,
-                             newVersion: Int) {
+    override fun onDowngrade(
+        db: SQLiteDatabase,
+        oldVersion: Int,
+        newVersion: Int
+    ) {
         throw UnsupportedDatabaseVersionException()
     }
 }

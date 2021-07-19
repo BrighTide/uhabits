@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2016 Álinson Santos Xavier <isoron@gmail.com>
+ * Copyright (C) 2016-2021 Álinson Santos Xavier <git@axavier.org>
  *
  * This file is part of Loop Habit Tracker.
  *
@@ -19,30 +19,41 @@
 
 package org.isoron.uhabits.widgets
 
-import android.appwidget.*
-import android.content.*
-import android.net.*
-import android.view.*
-import android.widget.*
-import org.isoron.uhabits.core.models.*
-import org.isoron.uhabits.core.utils.*
+import android.app.PendingIntent
+import android.appwidget.AppWidgetManager
+import android.content.Context
+import android.content.Intent
+import android.net.Uri
+import android.view.View
+import android.widget.RemoteViews
+import org.isoron.uhabits.core.models.Habit
+import org.isoron.uhabits.core.utils.StringUtils
 
 class StackWidget(
-        context: Context,
-        widgetId: Int,
-        private val widgetType: StackWidgetType,
-        private val habits: List<Habit>
-) : BaseWidget(context, widgetId) {
+    context: Context,
+    widgetId: Int,
+    private val widgetType: StackWidgetType,
+    private val habits: List<Habit>,
+    stacked: Boolean = true,
+) : BaseWidget(context, widgetId, stacked) {
+    override val defaultHeight: Int = 0
+    override val defaultWidth: Int = 0
 
-    override fun getOnClickPendingIntent(context: Context) = null
+    override fun getOnClickPendingIntent(context: Context): PendingIntent? = null
 
     override fun refreshData(v: View) {
         // unused
     }
 
+    override fun buildView(): View? {
+        // unused
+        return null
+    }
+
     override fun getRemoteViews(width: Int, height: Int): RemoteViews {
         val manager = AppWidgetManager.getInstance(context)
-        val remoteViews = RemoteViews(context.packageName, StackWidgetType.getStackWidgetLayoutId(widgetType))
+        val remoteViews =
+            RemoteViews(context.packageName, StackWidgetType.getStackWidgetLayoutId(widgetType))
         val serviceIntent = Intent(context, StackWidgetService::class.java)
         val habitIds = StringUtils.joinLongs(habits.map { it.id!! }.toLongArray())
 
@@ -50,14 +61,18 @@ class StackWidget(
         serviceIntent.putExtra(StackWidgetService.WIDGET_TYPE, widgetType.value)
         serviceIntent.putExtra(StackWidgetService.HABIT_IDS, habitIds)
         serviceIntent.data = Uri.parse(serviceIntent.toUri(Intent.URI_INTENT_SCHEME))
-        remoteViews.setRemoteAdapter(StackWidgetType.getStackWidgetAdapterViewId(widgetType), serviceIntent)
-        manager.notifyAppWidgetViewDataChanged(id, StackWidgetType.getStackWidgetAdapterViewId(widgetType))
-        remoteViews.setEmptyView(StackWidgetType.getStackWidgetAdapterViewId(widgetType),
-                StackWidgetType.getStackWidgetEmptyViewId(widgetType))
+        remoteViews.setRemoteAdapter(
+            StackWidgetType.getStackWidgetAdapterViewId(widgetType),
+            serviceIntent
+        )
+        manager.notifyAppWidgetViewDataChanged(
+            id,
+            StackWidgetType.getStackWidgetAdapterViewId(widgetType)
+        )
+        remoteViews.setEmptyView(
+            StackWidgetType.getStackWidgetAdapterViewId(widgetType),
+            StackWidgetType.getStackWidgetEmptyViewId(widgetType)
+        )
         return remoteViews
     }
-
-    override fun buildView() = null // unused
-    override fun getDefaultHeight() = 0 // unused
-    override fun getDefaultWidth() = 0 // unused
 }

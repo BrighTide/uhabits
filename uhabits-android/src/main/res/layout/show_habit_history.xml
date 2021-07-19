@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <!--
-  ~ Copyright (C) 2016 Álinson Santos Xavier <isoron@gmail.com>
+  ~ Copyright (C) 2016-2021 Álinson Santos Xavier <git@axavier.org>
   ~
   ~ This file is part of Loop Habit Tracker.
   ~
@@ -29,12 +29,12 @@
         style="@style/CardHeader"
         android:text="@string/calendar"/>
 
-    <org.isoron.uhabits.activities.common.views.HistoryChart
-        android:id="@+id/historyChart"
+    <org.isoron.platform.gui.AndroidDataView
+        android:id="@+id/chart"
         android:layout_width="match_parent"
         android:layout_height="160dp"/>
 
-    <Button
+    <androidx.appcompat.widget.AppCompatButton
         android:id="@+id/edit"
         style="?android:borderlessButtonStyle"
         android:layout_width="wrap_content"

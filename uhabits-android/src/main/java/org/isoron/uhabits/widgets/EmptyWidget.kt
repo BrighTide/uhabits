@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2016 Álinson Santos Xavier <isoron@gmail.com>
+ * Copyright (C) 2016-2021 Álinson Santos Xavier <git@axavier.org>
  *
  * This file is part of Loop Habit Tracker.
  *
@@ -19,18 +19,20 @@
 
 package org.isoron.uhabits.widgets
 
-import android.content.*
-import android.view.*
-import org.isoron.uhabits.widgets.views.*
+import android.app.PendingIntent
+import android.content.Context
+import android.view.View
+import org.isoron.uhabits.widgets.views.EmptyWidgetView
 
 class EmptyWidget(
-        context: Context,
-        widgetId: Int
-) : BaseWidget(context, widgetId) {
+    context: Context,
+    widgetId: Int,
+    stacked: Boolean = false,
+) : BaseWidget(context, widgetId, stacked) {
+    override val defaultHeight: Int = 200
+    override val defaultWidth: Int = 200
 
-    override fun getOnClickPendingIntent(context: Context) = null
+    override fun getOnClickPendingIntent(context: Context): PendingIntent? = null
     override fun refreshData(v: View) {}
     override fun buildView() = EmptyWidgetView(context)
-    override fun getDefaultHeight() = 200
-    override fun getDefaultWidth() = 200
 }

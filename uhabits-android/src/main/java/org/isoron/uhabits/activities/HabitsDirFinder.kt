@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2017 Álinson Santos Xavier <isoron@gmail.com>
+ * Copyright (C) 2016-2021 Álinson Santos Xavier <git@axavier.org>
  *
  * This file is part of Loop Habit Tracker.
  *
@@ -18,16 +18,16 @@
  */
 package org.isoron.uhabits.activities
 
-import org.isoron.androidbase.*
-import org.isoron.uhabits.core.ui.screens.habits.list.*
-import org.isoron.uhabits.core.ui.screens.habits.show.*
-import java.io.*
-import javax.inject.*
+import org.isoron.uhabits.AndroidDirFinder
+import org.isoron.uhabits.core.ui.screens.habits.list.ListHabitsBehavior
+import org.isoron.uhabits.core.ui.screens.habits.show.ShowHabitMenuPresenter
+import java.io.File
+import javax.inject.Inject
 
 class HabitsDirFinder @Inject
 constructor(
-        private val androidDirFinder: AndroidDirFinder
-) : ShowHabitMenuBehavior.System, ListHabitsBehavior.DirFinder {
+    private val androidDirFinder: AndroidDirFinder
+) : ShowHabitMenuPresenter.System, ListHabitsBehavior.DirFinder {
 
     override fun getCSVOutputDir(): File {
         return androidDirFinder.getFilesDir("CSV")!!

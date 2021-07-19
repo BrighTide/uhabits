@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2016 Álinson Santos Xavier <isoron@gmail.com>
+ * Copyright (C) 2016-2021 Álinson Santos Xavier <git@axavier.org>
  *
  * This file is part of Loop Habit Tracker.
  *
@@ -19,22 +19,23 @@
 
 package org.isoron.uhabits.preferences
 
-import android.content.*
-import android.preference.*
-import org.isoron.androidbase.*
+import android.content.Context
+import android.content.SharedPreferences
+import androidx.preference.PreferenceManager
 import org.isoron.uhabits.R
-import org.isoron.uhabits.core.*
-import org.isoron.uhabits.core.preferences.*
-import javax.inject.*
+import org.isoron.uhabits.core.AppScope
+import org.isoron.uhabits.core.preferences.Preferences
+import org.isoron.uhabits.inject.AppContext
+import javax.inject.Inject
 
 @AppScope
 class SharedPreferencesStorage
 @Inject constructor(
-        @AppContext context: Context
+    @AppContext context: Context
 ) : SharedPreferences.OnSharedPreferenceChangeListener, Preferences.Storage {
 
     private val sharedPrefs: SharedPreferences =
-            PreferenceManager.getDefaultSharedPreferences(context)
+        PreferenceManager.getDefaultSharedPreferences(context)
 
     private var preferences: Preferences? = null
 
@@ -46,49 +47,51 @@ class SharedPreferencesStorage
     override fun clear() = sharedPrefs.edit().clear().apply()
 
     override fun getBoolean(key: String, defValue: Boolean) =
-            sharedPrefs.getBoolean(key, defValue)
+        sharedPrefs.getBoolean(key, defValue)
 
     override fun getInt(key: String, defValue: Int) =
-            sharedPrefs.getInt(key, defValue)
+        sharedPrefs.getInt(key, defValue)
 
     override fun getLong(key: String, defValue: Long) =
-            sharedPrefs.getLong(key, defValue)
+        sharedPrefs.getLong(key, defValue)
 
     override fun getString(key: String, defValue: String): String =
-            sharedPrefs.getString(key, defValue)
+        sharedPrefs.getString(key, defValue)!!
 
     override fun onAttached(preferences: Preferences) {
         this.preferences = preferences
     }
 
     override fun putBoolean(key: String, value: Boolean) =
-            sharedPrefs.edit().putBoolean(key, value).apply()
+        sharedPrefs.edit().putBoolean(key, value).apply()
 
     override fun putInt(key: String, value: Int) =
-            sharedPrefs.edit().putInt(key, value).apply()
+        sharedPrefs.edit().putInt(key, value).apply()
 
     override fun putLong(key: String, value: Long) =
-            sharedPrefs.edit().putLong(key, value).apply()
+        sharedPrefs.edit().putLong(key, value).apply()
 
     override fun putString(key: String, value: String) =
-            sharedPrefs.edit().putString(key, value).apply()
+        sharedPrefs.edit().putString(key, value).apply()
 
     override fun remove(key: String) =
-            sharedPrefs.edit().remove(key).apply()
+        sharedPrefs.edit().remove(key).apply()
 
-    override fun onSharedPreferenceChanged(sharedPreferences: SharedPreferences,
-                                           key: String) {
+    override fun onSharedPreferenceChanged(
+        sharedPreferences: SharedPreferences,
+        key: String?
+    ) {
         val preferences = this.preferences ?: return
         sharedPreferences.unregisterOnSharedPreferenceChangeListener(this)
         when (key) {
             "pref_checkmark_reverse_order" ->
                 preferences.isCheckmarkSequenceReversed = getBoolean(key, false)
+            "pref_midnight_delay" ->
+                preferences.isMidnightDelayEnabled = getBoolean(key, false)
             "pref_sticky_notifications" ->
                 preferences.setNotificationsSticky(getBoolean(key, false))
             "pref_led_notifications" ->
                 preferences.setNotificationsLed(getBoolean(key, false))
-            "pref_feature_sync" ->
-                preferences.isSyncEnabled = getBoolean(key, false)
         }
         sharedPreferences.registerOnSharedPreferenceChangeListener(this)
     }
